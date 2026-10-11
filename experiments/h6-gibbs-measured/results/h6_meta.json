@@ -1,0 +1,66 @@
+{
+ "fit_sizes": [
+  50,
+  100,
+  150,
+  200,
+  250,
+  300
+ ],
+ "beta": 0.7,
+ "sweeps_anchor": 1500,
+ "burn": 500,
+ "fit_linear": {
+  "a": 5.227565654684299e-07,
+  "b": -0.0008711864406779549,
+  "r2": 0.9991629081525221
+ },
+ "fit_power": {
+  "A": 2.87714680571268,
+  "p": -15.136395832446162,
+  "r2": -1.4085907091190872
+ },
+ "fit_linear_pred_per_sweep_S500": 0.1298179549264295,
+ "fit_linear_pred_per_sweep_S750": 0.2931793816353138,
+ "fit_linear_pred_per_sweep_S1000": 0.5218853790277519,
+ "anchors": [
+  {
+   "S": 500,
+   "n": 250000,
+   "sweeps_target": 1500,
+   "sweeps_achieved": 1500,
+   "burn": 500,
+   "total_s": 138.66,
+   "per_sweep_s": 0.092442,
+   "ari": 0.9936,
+   "budget_hit": false
+  },
+  {
+   "S": 750,
+   "n": 562500,
+   "sweeps_target": 1500,
+   "sweeps_achieved": 1500,
+   "burn": 500,
+   "total_s": 360.99,
+   "per_sweep_s": 0.240658,
+   "ari": 0.9937,
+   "budget_hit": false
+  },
+  {
+   "S": 1000,
+   "n": 1000000,
+   "sweeps_target": 1500,
+   "sweeps_achieved": 1500,
+   "burn": 500,
+   "total_s": 674.21,
+   "per_sweep_s": 0.449476,
+   "ari": 0.9934,
+   "budget_hit": false
+  }
+ ],
+ "old_extrapolation_reference": {
+  "S500_est_s": 204,
+  "S1000_est_s": 817,
+  "note": "h2 analysis 的线性外推值，供对照"
+ }
+}

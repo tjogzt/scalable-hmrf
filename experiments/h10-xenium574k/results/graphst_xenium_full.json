@@ -1,0 +1,10 @@
+{
+ "mode": "full",
+ "n": 574852,
+ "K": 8,
+ "ari_raw_kmeans8": 0.2826,
+ "ari_ref_kmeans8": 0.2401,
+ "ari_raw_graphclust": 0.2427,
+ "ari_ref_graphclust": 0.1354,
+ "t_total": 4085.7
+}
