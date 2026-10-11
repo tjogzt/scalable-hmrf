@@ -1,0 +1,4 @@
+pair,median_diff,mean_diff,wins,losses,cliff_delta,wilcoxon_p
+Ours(best) vs BayesSpace,0.0211,0.0347,6,6,0.0,0.6221
+Ours(best) vs SC.MEB,0.0662,0.0673,7,5,0.167,0.1763
+Ours(best) vs GraphST,0.1672,0.1547,11,1,0.833,0.0015

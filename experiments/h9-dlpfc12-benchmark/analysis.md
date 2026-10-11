@@ -1,6 +1,6 @@
 # H9 DLPFC 12-Section Four-Method Benchmark — Analysis
 
-Date: 2026-10-11 (Batch 2) | Figures/tables: `figures/fig7_dlpfc12_benchmark.{pdf,png}`, `results/h9_benchmark_{slices,summary}.csv`
+Date: 2026-10-11 (Batch 2) | Figures/tables: `paper/figures/fig7_dlpfc12_benchmark.{pdf,png}`, `results/h9_benchmark_{slices,summary}.csv`
 
 ## Setup
 - 12 DLPFC sections (8 with 7 layers, k=7: 151507-10, 151673-76; 4 with 5 layers, k=5: 151669-72),
@@ -72,5 +72,19 @@ Date: 2026-10-11 (Batch 2) | Figures/tables: `figures/fig7_dlpfc12_benchmark.{pd
 ## Reproduction checklist
 - Ours: `code/run_ours.py all` (all sections within 15 min); feature export `code/export_features.py`
 - BayesSpace: `code/run_bayesspace.R all`; SC.MEB: `code/run_scmeb.R all` (official configuration C); GraphST: `code/run_graphst.py all`
-- Aggregation: `code/aggregate.py` → `results/h9_benchmark_{slices,summary}.csv`; figure: `figures/make_fig7.py`
+- Aggregation: `code/aggregate.py` → `results/h9_benchmark_{slices,summary}.csv`; figure: `paper/figures/make_fig7.py`
 - Environment pitfalls and fixes are recorded in the skill `hmrf-spatial-benchmark` (rpy2 dual-BLAS deadlock, SC.MEB OpenMP/parallel bug, etc.)
+
+
+## Batch-4 addendum (2026-10-11): unified metrics + paired significance tests
+- New `code/metrics_all_methods.py`: unified ARI / NMI / boundary-F1 for all methods + oracle
+  reference across the 12 sections (reuses all stored label files) -> `results/h9_benchmark_metrics.csv`.
+- Means over 12 sections (ARI / NMI / b-F1):
+  ours(best) 0.4634/0.5690/0.1188; BayesSpace 0.4287/0.5917/0.1118; SC-MEB 0.3962/0.5082/0.1381;
+  GraphST 0.3088/0.4687/0.0843; oracle 0.6469/0.7041/0.2187.
+- Paired Wilcoxon (n=12, `results/h9_benchmark_stats.csv`): vs GraphST median diff +0.167 (11/12 wins,
+  p=0.0015, Cliff delta=0.83, significant); vs BayesSpace +0.021 (p=0.62); vs SC-MEB +0.066 (p=0.18).
+  The latter two are not significant and the metric ranking is near-parity (NMI favors BayesSpace,
+  boundary-F1 favors SC-MEB) -> paper wording is "competitiveness, not dominance" (guards against
+  over-claiming).
+- Reproduction: `code/metrics_all_methods.py` -> `results/h9_benchmark_{metrics,stats}.csv`.

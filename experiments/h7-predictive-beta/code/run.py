@@ -30,7 +30,7 @@ MASKS = (7,) if SMOKE else (7, 8, 9)
 MASK_FRAC = 0.05
 BETAS = (0.3, 0.5, 0.7, 1.0, 1.5)
 N_INIT = 1 if SMOKE else 2
-SLICES = ["151673"] if SMOKE else ["151673", "151509", "151671"]
+SLICES = ["151673"] if SMOKE else ["151673", "151509", "151671", "151507", "151669"]
 
 
 def _nbr_sum(q, edges):

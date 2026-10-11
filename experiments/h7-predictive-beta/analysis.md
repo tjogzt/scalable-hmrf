@@ -56,6 +56,17 @@ spearman(LL, ARI) against spearman(ELBO, ARI) (rank correlation across 5 starts)
   Recommended phrasing for the paper: report all three protocols—best/median/ELBO-selected—side by side, making explicit the open nature of the selection problem.
 
 ## 3. Reproduction and files
-- `results/h7_runs.csv` (45 rows: 3 sections + simulation × 3 masks × 5 β), `h7_summary.json`
+- `results/h7_runs.csv` (90 rows: 5 sections + simulation × 3 masks × 5 β), `h7_summary.json`
 - `results/h7b_init_selection.csv` (30 rows), `h7b_run.log`
 - Single-mask EM ∈ [0.2, 1.6] s (~3.5–4.8K spots); intermediate labels are not retained to avoid misuse.
+
+
+## Batch-4 update (2026-10-11): extended to 5 sections (+151507 / +151669)
+- Protocol unchanged (5 beta x 3 masks); `results/h7_runs.csv` is now the 90-row version
+  (6 cases x 15 rows); the original 3 sections reproduce bit-for-bit in the new table.
+- Likelihood-maximizing beta: 9/15 at the grid maximum (1.5), 5/15 at 1.0, 1/15 at 0.7
+  (i.e., 14/15 at beta >= 1.0, never below 0.7), while section-level ARI peaks sit at the
+  low/mid end (0.3-0.7 in 4/5 sections) -- the negative result is stable across 5 sections.
+- Per-setting likelihood range 0.4-0.8 nats against ARI swings up to 0.129; the Gaussian
+  simulation (62.5K spots) keeps LL aligned with ARI (0.992 at beta=1.5) -- the failure mode
+  is specific to real data.
