@@ -8,7 +8,7 @@ def _find_root(_start):
     raise RuntimeError("project root not found; run inside the repository")
 _ROOT = _os.environ.get("HMRF_ROOT") or _find_root(__file__)
 # ------------------------------------------------------
-"""H1: MF-VI vs Gibbs 正确性对比（高斯发射，oracle 参数）。"""
+"""H1: MF-VI vs Gibbs correctness comparison (Gaussian emission, oracle parameters)."""
 import sys, time, csv
 sys.path.insert(0, _os.path.join(_ROOT, "src"))
 import numpy as np
@@ -20,7 +20,7 @@ rows = []
 for seed in (0, 1, 2):
     truth = sample_potts(H, W, K, beta=1.0, sweeps=3000, seed=seed)
     y, mu = gaussian_emission(truth, K, d, mu_scale=1.5, sigma=0.8, seed=seed)
-    # oracle 一元项
+    # oracle unary terms
     sigma2 = 0.8 ** 2
     ysq = (y ** 2).sum(1, keepdims=True)
     log_u = -0.5 * d * np.log(2 * np.pi * sigma2) - (ysq - 2 * y @ mu.T + (mu ** 2).sum(1)[None, :]) / (2 * sigma2)
@@ -38,7 +38,7 @@ for seed in (0, 1, 2):
                          ari_vi_gibbs=round(adjusted_rand_index(vi_mode, g_mode), 4),
                          t_vi_s=round(t_vi, 3), t_gibbs_s=round(t_g, 2), vi_iters=it))
         print(rows[-1])
-# beta 失配：真 beta=0.5, 模型 beta=1.5
+# beta mismatch: true beta=0.5, model beta=1.5
 truth = sample_potts(H, W, K, beta=0.5, sweeps=3000, seed=7)
 y, mu = gaussian_emission(truth, K, d, mu_scale=1.5, sigma=0.8, seed=7)
 sigma2 = 0.8 ** 2

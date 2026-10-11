@@ -1,18 +1,18 @@
-# H3 分析：α-expansion 图割 vs 均值场 VI
+# H3 Analysis: α-expansion Graph Cut vs Mean-Field VI
 
-## 正确性（穷举验证）
-- 2×2 单步 300 例、3×3 单步 30 例：割结果能量 = 暴力枚举最优（全部 PASS）。
-- 2×2 多标签全枚举：49/50 达全局最优（1 例为 α-expansion 固有局部性，符合理论）。
-- 开发中修复两个 bug：① pymaxflow get_segment 语义反向（0=源侧）；② potts_energy 无向边重复计数。
+## Correctness (exhaustive verification)
+- 2×2 single-step 300 cases, 3×3 single-step 30 cases: cut result energy = brute-force optimum (all PASS).
+- 2×2 multi-label full enumeration: 49/50 reach the global optimum (1 case is the intrinsic locality of α-expansion, consistent with theory).
+- Two bugs fixed during development: ① pymaxflow get_segment semantics inverted (0=source side); ② potts_energy double-counting undirected edges.
 
-## 同实例对比（VI-EM 一元项, K=8, β=0.7）
-| S | n | ARI(MF) | ARI(GC) | 能量 MF | 能量 GC | t_MF | t_GC |
+## Same-instance comparison (VI-EM unary terms, K=8, β=0.7)
+| S | n | ARI(MF) | ARI(GC) | Energy MF | Energy GC | t_MF | t_GC |
 |---|---|---|---|---|---|---|---|
 | 100 | 10K | 0.9942 | 0.9942 | 145758.0 | 145758.0 | 5ms | 0.25s |
 | 250 | 62.5K | 0.9933 | 0.9934 | 908688.9 | 908689.0 | 38ms | 1.49s |
 
-## 发现
-1. 易分数据上两推断核给出几乎相同解（ARI 一致、能量差 <1e-3 相对）→ 精确图割无收益，MF 快 40-50x。
-2. 图割能量略低（更接近全局最优）符合理论；但要等"高 β / 弱一元项"压力区才可能显出差异 → h3b。
-3. 工程现实：纯 Python 建图是瓶颈（S=250 需 1.49s，百万级预计 >30s 且内存翻倍）；C++ 建图（pygco）是图割路径规模化前提——这与方向二"工程化"命题直接相关。
-4. 结论（当前证据）：MF-VI 保持主路径；图割作为"困难区域精确解"的备选引擎，待 h3b 判定。
+## Findings
+1. On easily separable data the two inference kernels give nearly identical solutions (identical ARI, energy difference <1e-3 relative) → exact graph cut yields no benefit, and MF is 40-50x faster.
+2. Graph-cut energy is slightly lower (closer to the global optimum), consistent with theory; but a difference can only emerge in the "high β / weak unary terms" stress region → h3b.
+3. Engineering reality: pure-Python graph construction is the bottleneck (S=250 needs 1.49s; at the million scale it is projected to be >30s with doubled memory); C++ graph construction (pygco) is the prerequisite for scaling the graph-cut path — directly relevant to Direction Two's "engineering" proposition.
+4. Conclusion (current evidence): MF-VI remains the main path; graph cut serves as a backup engine for "exact solutions in difficult regions", pending the h3b decision.

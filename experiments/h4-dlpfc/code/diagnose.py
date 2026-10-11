@@ -8,7 +8,7 @@ def _find_root(_start):
     raise RuntimeError("project root not found; run inside the repository")
 _ROOT = _os.environ.get("HMRF_ROOT") or _find_root(__file__)
 # ------------------------------------------------------
-"""H4 诊断：oracle 上限 / 纯 GMM 基线 / z-score 特征 / 更好初始化。"""
+"""H4 diagnostics: oracle upper bound / pure GMM baseline / z-score features / better init."""
 import sys, time
 sys.path.insert(0, _os.path.join(_ROOT, "src"))
 import numpy as np
@@ -18,7 +18,7 @@ from hmrf_solvers import em_mf_gaussian_graph, mean_field_graph, gaussian_log_un
 
 DATA = _os.path.join(_ROOT, "data/dlpfc")
 K = 7
-# 载入（与 run.py 相同）
+# load (same as run.py)
 f = h5py.File(f"{DATA}/151673_raw_feature_bc_matrix.h5", "r")
 M = f["matrix"]
 n_genes, n_spots = int(M["shape"][0]), int(M["shape"][1])
@@ -61,7 +61,7 @@ def ari_mf(Ym, beta):
     q, mu, sig, iters, elbo = em_mf_gaussian_graph(Ym, K, beta, edges, restarts=1, max_iter=300, tol=1e-4, seed=9)
     return adjusted_rand_index(truth, np.argmax(q, axis=1)), elbo, sig
 
-# (a) oracle 上限：真标签均值 + 真 σ 下纯 MF
+# (a) oracle upper bound: pure MF with true-label means + true sigma
 mu_or = np.zeros((K, Y.shape[1]))
 for k in range(K):
     mu_or[k] = Y[truth == k].mean(0)
@@ -70,18 +70,18 @@ for b in (0.5, 1.0, 1.5):
     qo, it = mean_field_graph(log_u, b, edges, max_iter=500, tol=1e-3)
     print(f"ORACLE beta={b}: ARI={adjusted_rand_index(truth, np.argmax(qo, axis=1)):.4f} iters={it}", flush=True)
 
-# (b) 纯 GMM（beta=0，即无空间先验）
+# (b) pure GMM (beta=0, i.e. no spatial prior)
 for seed in (9, 10):
     q, mu, sig, iters, elbo = em_mf_gaussian_graph(Y, K, 0.0, edges, restarts=1, max_iter=300, tol=1e-4, seed=seed)
     print(f"GMM beta=0 seed={seed}: ARI={adjusted_rand_index(truth, np.argmax(q, axis=1)):.4f}", flush=True)
 
-# (c) z-score 特征后重跑 VI-EM
+# (c) rerun VI-EM after z-score features
 Yz = (Y - Y.mean(0, keepdims=True)) / (Y.std(0, keepdims=True) + 1e-6)
 for b in (0.7, 1.3):
     q, mu, sig, iters, elbo = em_mf_gaussian_graph(Yz, K, b, edges, restarts=1, max_iter=300, tol=1e-4, seed=9)
     print(f"ZSCORE beta={b}: ARI={adjusted_rand_index(truth, np.argmax(q, axis=1)):.4f}", flush=True)
 
-# (d) 更多起点 + 更大 beta（原始特征）
+# (d) more restarts + larger beta (raw features)
 for b in (1.7, 2.2):
     q, mu, sig, iters, elbo = em_mf_gaussian_graph(Y, K, b, edges, restarts=3, max_iter=300, tol=1e-4, seed=9)
     print(f"RAW beta={b} r3: ARI={adjusted_rand_index(truth, np.argmax(q, axis=1)):.4f}", flush=True)

@@ -8,7 +8,7 @@ def _find_root(_start):
     raise RuntimeError("project root not found; run inside the repository")
 _ROOT = _os.environ.get("HMRF_ROOT") or _find_root(__file__)
 # ------------------------------------------------------
-"""H4: DLPFC 151673 真实数据验证（7 层标签，图结构 VI-EM，beta 网格 + ELBO 选择）。"""
+"""H4: DLPFC 151673 real-data validation (7-layer labels, graph-structured VI-EM, beta grid + ELBO selection)."""
 import sys, time, csv, json
 sys.path.insert(0, _os.path.join(_ROOT, "src"))
 import numpy as np
@@ -21,22 +21,22 @@ SAMPLE = "151673"
 K, d_hvg, BETA_GRID = 7, 2000, (0.5, 0.7, 1.0, 1.3)
 
 t_all = time.perf_counter()
-# ---- 载入计数 ----
+# ---- load counts ----
 f = h5py.File(f"{DATA}/{SAMPLE}_raw_feature_bc_matrix.h5", "r")
 M = f["matrix"]
-n_genes, n_spots = tuple(int(x) for x in M["shape"])  # 该文件 shape 为 (genes, spots)
+n_genes, n_spots = tuple(int(x) for x in M["shape"])  # this file's shape is (genes, spots)
 data = np.array(M["data"], dtype=np.float32)
 indices = np.array(M["indices"], dtype=np.int64)
 indptr = np.array(M["indptr"], dtype=np.int64)
 barcodes = [b.decode() for b in f["matrix"]["barcodes"]]
 f.close()
 X = np.zeros((n_spots, n_genes), dtype=np.float32)
-for s in range(n_spots):  # CSR 按 spot 行存储（indptr 长度 = n_spots+1）
+for s in range(n_spots):  # CSR is stored by spot rows (indptr length = n_spots+1)
     a, b = indptr[s], indptr[s + 1]
     X[s, indices[a:b]] = data[a:b]
 print(f"counts dense: {X.shape}, time {time.perf_counter()-t_all:.1f}s", flush=True)
 
-# ---- 坐标与标签 ----
+# ---- coordinates and labels ----
 pos = pd.read_csv(f"{DATA}/tissue_positions_list.txt", header=None, index_col=0)
 pos.index = pos.index.astype(str)
 pos.columns = ["in_tissue", "row", "col", "px_row", "px_col"]
@@ -73,7 +73,7 @@ Y = lx[:, hvg].astype(np.float64)
 del X, cpm, lx
 print(f"HVG selected {d_hvg}", flush=True)
 
-# ---- 六角点阵邻接边表（Visium：同行相距 2 列，相邻行相差 ±1 列）----
+# ---- hexagonal lattice adjacency edge list (Visium: same row 2 columns apart, adjacent rows differ by ±1 column) ----
 pos2i = {(r, c): i for i, (r, c) in enumerate(zip(rows, cols))}
 edges = []
 for i, (r, c) in enumerate(zip(rows, cols)):
@@ -84,7 +84,7 @@ for i, (r, c) in enumerate(zip(rows, cols)):
 edges = np.array(edges, dtype=np.int64)
 print(f"edges: {len(edges)} (avg {len(edges)/n:.2f}/spot)", flush=True)
 
-# ---- VI-EM beta 网格 ----
+# ---- VI-EM beta grid ----
 rows_out = []
 best = None
 for beta in BETA_GRID:

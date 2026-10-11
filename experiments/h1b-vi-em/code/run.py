@@ -8,7 +8,7 @@ def _find_root(_start):
     raise RuntimeError("project root not found; run inside the repository")
 _ROOT = _os.environ.get("HMRF_ROOT") or _find_root(__file__)
 # ------------------------------------------------------
-"""H1b: VI-EM 联合估计（去 oracle）vs VI-oracle vs Gibbs-oracle。"""
+"""H1b: VI-EM joint estimation (no oracle) vs VI-oracle vs Gibbs-oracle."""
 import sys, time, csv
 sys.path.insert(0, _os.path.join(_ROOT, "src"))
 import numpy as np

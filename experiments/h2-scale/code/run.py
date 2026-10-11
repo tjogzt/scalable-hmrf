@@ -8,7 +8,7 @@ def _find_root(_start):
     raise RuntimeError("project root not found; run inside the repository")
 _ROOT = _os.environ.get("HMRF_ROOT") or _find_root(__file__)
 # ------------------------------------------------------
-"""H2: 规模-精度-时间曲线（kill test kt1）+ NB 计数发射 + Gibbs 外推对照。"""
+"""H2: scale-accuracy-time curves (kill test kt1) + NB count emission + Gibbs extrapolation comparison."""
 import sys, time, csv, resource
 sys.path.insert(0, _os.path.join(_ROOT, "src"))
 import numpy as np
@@ -18,7 +18,7 @@ from hmrf_solvers import em_mf_gaussian, em_mf_nb, checkerboard_gibbs, gaussian_
 K, d, BETA, SIGMA, MUC = 8, 20, 0.7, 0.5, 2.0
 rows = []
 
-print("== 高斯发射规模曲线 ==")
+print("== Gaussian emission scale curves ==")
 for S in (100, 250, 500, 750, 1000):
     t0 = time.perf_counter()
     truth = gaussian_rf_domains(S, K, seed=11)
@@ -36,7 +36,7 @@ for S in (100, 250, 500, 750, 1000):
                      iters=iters, peak_gb=round(rss, 2)))
     print(rows[-1], flush=True)
 
-print("== NB 计数发射 ==")
+print("== NB count emission ==")
 factors = [0.25, 0.5, 1.0, 2.0, 4.0, 0.35, 1.5, 3.0]
 for S in (500, 1000):
     t0 = time.perf_counter()
@@ -55,7 +55,7 @@ for S in (500, 1000):
                      iters=iters, peak_gb=round(rss, 2)))
     print(rows[-1], flush=True)
 
-print("== Gibbs 每扫时间外推 ==")
+print("== Gibbs per-sweep time extrapolation ==")
 gibbs_pts = []
 for S in (50, 100):
     truth = gaussian_rf_domains(S, K, seed=31)
@@ -72,7 +72,7 @@ a, b = np.polyfit(x, t, 1)
 print(f"fit: t_sweep = {a:.3e} * n + {b:.4f}")
 for S in (500, 1000):
     n = S * S
-    t_est = (a * n + b) * 1500  # 1500 sweeps 参照
+    t_est = (a * n + b) * 1500  # 1500 sweeps reference
     vi_row = [r for r in rows if r['S'] == S and r['emission'] == 'gauss'][0]
     print(dict(S=S, gibbs_est_1500sweeps_s=round(t_est, 1), vi_s=vi_row['t_vi_s'], speedup_x=round(t_est / vi_row['t_vi_s'], 1)))
 with open(_os.path.join(_ROOT, "experiments/h2-scale/results/h2_results.csv"), "w", newline="") as f:

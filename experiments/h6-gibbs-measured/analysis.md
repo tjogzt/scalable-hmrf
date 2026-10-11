@@ -1,18 +1,18 @@
-# H6 分析：Gibbs 基线实测（替代外推，审查后批次1）
+# H6 Analysis: Gibbs Baseline Measured (Replacing Extrapolation, Post-review Batch 1)
 
-## 目的
-消除 h2 的"exact Gibbs baseline is extrapolated"软肋：把 2 点（2.5K/10K）线性外推的 76–145× 提速，换成**实测**数字。
+## Purpose
+Eliminate h2's "exact Gibbs baseline is extrapolated" soft spot: replace the 76–145× speedup obtained by linear extrapolation from 2 points (2.5K/10K) with **measured** numbers.
 
-## 方法
-- **每扫成本**：S ∈ {50,100,150,200,250,300}（2.5K–90K）逐点实测 per-sweep（含在线计数），线性拟合；
-- **全量锚点**：与原外推口径完全一致——1500 sweeps（burn=500）、oracle 发射参数、β=0.7、实例 seeds (11,12)；
-- 在线计数版与原 checkerboard_gibbs 的每步工作量一致（以 O(nK) 计数累积替代样本栈，语义同为后验模态）；
-- 预算守卫开启，未触发（三档全部跑满 1500 sweeps）。
+## Method
+- **Per-sweep cost**: S ∈ {50,100,150,200,250,300} (2.5K–90K), measured per-sweep point by point (with online counting), linear fit;
+- **Full-scale anchors**: exactly the same protocol as the original extrapolation—1500 sweeps (burn=500), oracle emission parameters, β=0.7, instance seeds (11,12);
+- The online-counting version has the same per-step workload as the original checkerboard_gibbs (it accumulates O(nK) counts instead of a sample stack, semantically still the posterior mode);
+- Budget guard enabled, not triggered (all three tiers ran the full 1500 sweeps).
 
-## 结果
+## Results
 
-### 每扫成本（h6_sweepcost.csv）
-| S | n | 每扫(s) |
+### Per-sweep cost (h6_sweepcost.csv)
+| S | n | per-sweep (s) |
 |---|---|---|
 | 50 | 2.5K | 0.00108 |
 | 100 | 10K | 0.00432 |
@@ -21,38 +21,38 @@
 | 250 | 62.5K | 0.03225 |
 | 300 | 90K | 0.04617 |
 
-线性拟合：t = 5.23e-7·n − 8.7e-4（**R² = 0.9992**）；幂律拟合不成立（n≥2.5K 后趋于线性+常数）。
+Linear fit: t = 5.23e-7·n − 8.7e-4 (**R² = 0.9992**); the power-law fit does not hold (it becomes linear + constant for n≥2.5K).
 
-### 全量锚点（h6_anchors.csv，1500 sweeps 实测）
-| S | n | 总时间(s) | 每扫(ms) | 模态 ARI |
+### Full-scale anchors (h6_anchors.csv, 1500 sweeps measured)
+| S | n | total time (s) | per-sweep (ms) | mode ARI |
 |---|---|---|---|---|
 | 500 | 250K | **138.66** | 92.4 | 0.9936 |
 | 750 | 562.5K | **360.99** | 240.7 | 0.9937 |
 | 1000 | 1M | **674.21** | 449.5 | 0.9934 |
 
-### 旧外推 vs 实测
-| 规模 | 旧外推(h2) | 实测(h6) | 偏差 |
+### Old extrapolation vs measured
+| Scale | Old extrapolation (h2) | Measured (h6) | Deviation |
 |---|---|---|---|
-| 250K | 204 s | 138.7 s | 旧值**偏高 32%** |
-| 1M | 817 s | 674.2 s | 旧值**偏高 17%** |
+| 250K | 204 s | 138.7 s | old value **32% too high** |
+| 1M | 817 s | 674.2 s | old value **17% too high** |
 
-原因：旧拟合仅用 2.5K/10K 两个小点，小网格的固定开销拉高了斜率，外推系统性高估每扫成本。
+Cause: the old fit used only the two small points 2.5K/10K, and the fixed overhead of the small grid inflated the slope, so the extrapolation systematically overestimated the per-sweep cost.
 
-### 修正后的提速（vs h2d 的 VI-EM 时间）
-| 规模 | Gibbs 实测 | VI-EM 单次(中位) | 提速 | VI-EM 3起点(均值) | 提速 |
+### Corrected speedups (vs VI-EM time from h2d)
+| Scale | Gibbs measured | VI-EM single run (median) | speedup | VI-EM 3-start (mean) | speedup |
 |---|---|---|---|---|---|
 | 250K | 138.66 s | 0.69 s | **201×** | 2.12 s | **65×** |
 | 562.5K | 360.99 s | 2.34 s | **154×** | 22.49 s | **16×** |
 | 1M | 674.21 s | 3.98 s | **169×** | 13.74 s | **49×** |
 
-（562.5K 的 3 起点均值受实例11 两个撞上限运行拉高；按中位数 8.99 s 计为 40×。）
+(The 3-start mean at 562.5K is inflated by two runs for instance 11 that hit the cap; using the median 8.99 s it is 40×.)
 
-## 结论
-1. **kt1（≥10× 提速闸门）在新口径下全部通过**：稳健政策下 16–65×，单次运行 154–201×。
-2. 论文所有提速数字改为**实测口径**，并明确标注政策（单次 vs 3起点）；"76–145×（外推）"作废。
-3. **Gibbs 模态 ARI（0.9934–0.9937）与 VI-EM 完全持平** → 进一步支持核心叙事："差距不在推断质量、而在成本；精确/采样推断在规模下不可用是经济性问题"。
-4. 公平性注记（写入论文）：Gibbs 获得 oracle 发射参数（免费）而 VI-EM 全量估计参数——比较对 Gibbs 有利；本实现为 numpy 单线程，非 BayesSpace 的 C++ MCMC，跨实现比较需谨慎。
-5. 每扫成本模型（R²=0.9992）可外推至更大规模的预期成本，作为论文的 scalability 论据。
+## Conclusion
+1. **kt1 (≥10× speedup gate) passes in full under the new protocol**: 16–65× under the robust policy, 154–201× for single runs.
+2. All speedup numbers in the paper are changed to the **measured protocol**, with the policy explicitly labeled (single run vs 3-start); "76–145× (extrapolated)" is void.
+3. **The Gibbs mode ARI (0.9934–0.9937) is fully on par with VI-EM** → further supporting the core narrative: "the gap is not in inference quality but in cost; the infeasibility of exact/sampling inference at scale is an economic problem".
+4. Fairness note (to be written into the paper): Gibbs is given oracle emission parameters (free) whereas VI-EM estimates parameters in full—the comparison favors Gibbs; this implementation is single-threaded numpy, not BayesSpace's C++ MCMC, so cross-implementation comparison requires caution.
+5. The per-sweep cost model (R²=0.9992) can be extrapolated to the expected cost at larger scales, as a scalability argument for the paper.
 
-## 文件
-- code/run.py（含 smoke 模式）；results/h6_sweepcost.csv、h6_anchors.csv、h6_meta.json、h6_speedup_summary.csv
+## Files
+- code/run.py (includes smoke mode); results/h6_sweepcost.csv, h6_anchors.csv, h6_meta.json, h6_speedup_summary.csv

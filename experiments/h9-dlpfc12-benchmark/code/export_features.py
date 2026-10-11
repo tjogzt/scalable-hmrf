@@ -8,7 +8,7 @@ def _find_root(_start):
     raise RuntimeError("project root not found; run inside the repository")
 _ROOT = _os.environ.get("HMRF_ROOT") or _find_root(__file__)
 # ------------------------------------------------------
-"""导出 12 切片的本方法特征管线产物（PC50 / 邻接边 / 真值），供 SC.MEB 同管线基线使用。"""
+"""Export our method's feature-pipeline artifacts (PC50 / adjacency edges / ground truth) for all 12 slices, for the SC.MEB same-pipeline baseline."""
 import sys, os
 import numpy as np
 import pandas as pd

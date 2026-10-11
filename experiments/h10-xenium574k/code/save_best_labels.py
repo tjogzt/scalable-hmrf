@@ -8,9 +8,9 @@ def _find_root(_start):
     raise RuntimeError("project root not found; run inside the repository")
 _ROOT = _os.environ.get("HMRF_ROOT") or _find_root(__file__)
 # ------------------------------------------------------
-"""H10 标签复现（多配置）：同种子确定性重放指定 (K,beta,restart)，max_iter=500 并报告收敛。
-用法: python save_best_labels.py 8:0.7:2 25:0.7:2
-输出: results/h10_labels_K{K}_b{beta}_r{r}.npz（每个配置一个文件）
+"""H10 label reproduction (multiple configs): deterministically replay the given (K,beta,restart) with the same seed, max_iter=500, and report convergence.
+Usage: python save_best_labels.py 8:0.7:2 25:0.7:2
+Output: results/h10_labels_K{K}_b{beta}_r{r}.npz (one file per config)
 """
 import sys, os, time
 import numpy as np
@@ -21,7 +21,7 @@ from scipy.spatial import cKDTree
 ROOT = _ROOT
 XEN = _os.environ.get("HMRF_XENIUM_DIR", "")
 if not XEN or not _os.path.isdir(XEN):
-    raise SystemExit("环境变量 HMRF_XENIUM_DIR 未设置或无效：请指向 Xenium outs 目录（10x Genomics 公开数据，见 README）")
+    raise SystemExit("env var HMRF_XENIUM_DIR is unset or invalid: point it at the Xenium outs directory (10x Genomics public data, see README)")
 OUT = os.path.join(ROOT, "experiments/h10-xenium574k/results")
 sys.path.insert(0, os.path.join(ROOT, "src"))
 from hmrf_solvers import gaussian_log_unaries, adjusted_rand_index  # noqa
@@ -30,7 +30,7 @@ CONFIGS = []
 for a in sys.argv[1:]:
     K_, b_, r_ = a.split(":")
     CONFIGS.append((int(K_), float(b_), int(r_)))
-assert CONFIGS, "用法: save_best_labels.py K:beta:restart [K:beta:restart ...]"
+assert CONFIGS, "Usage: save_best_labels.py K:beta:restart [K:beta:restart ...]"
 
 rng = np.random.default_rng(49)
 t0 = time.time()

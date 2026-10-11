@@ -8,9 +8,9 @@ def _find_root(_start):
     raise RuntimeError("project root not found; run inside the repository")
 _ROOT = _os.environ.get("HMRF_ROOT") or _find_root(__file__)
 # ------------------------------------------------------
-"""fig8 v3: Xenium Breast IDC 574K 细胞三面板域图（参照 | 本方法 | GraphST，匈牙利匹配对齐颜色）。
-数据: h10_labels_K8_b0.7_r2.npz（本方法） + graphst_xenium_labels_raw.csv（GraphST raw）
-输出: paper/figures/fig8_xenium_domains.{pdf,png}
+"""fig8 v3: Xenium Breast IDC 574K-cell three-panel domain map (reference | our method | GraphST, colours aligned by Hungarian matching).
+Data: h10_labels_K8_b0.7_r2.npz (our method) + graphst_xenium_labels_raw.csv (GraphST raw)
+Output: paper/figures/fig8_xenium_domains.{pdf,png}
 """
 import os
 import numpy as np
@@ -29,7 +29,7 @@ plt.rcParams.update({
 PROJ = _ROOT
 RES = os.path.join(PROJ, "experiments/h10-xenium574k/results")
 FIG = next(p for p in (os.path.join(PROJ, "paper", "figures"), os.path.join(PROJ, "figures"))
-           if os.path.isdir(p))  # 兼容工作区与发布两种布局
+           if os.path.isdir(p))  # compatible with both the workspace and release layouts
 
 d = np.load(os.path.join(RES, "h10_labels_K8_b0.7_r2.npz"))
 ours = d["pred"].astype(int); ref = d["lab_k8"].astype(int); xy = d["coords"]

@@ -1,8 +1,8 @@
-"""多类 Potts HMRF 的 alpha-expansion 图割推断（pymaxflow, Kolmogorov-Zabih 构造）。
+"""Alpha-expansion graph-cut inference for the multi-class Potts HMRF (pymaxflow, Kolmogorov-Zabih construction).
 
-约定：节点在源侧(S, segment==1) => b=1（切到 alpha）；汇侧(T, segment==0) => b=0（保持原标签）。
-割代价 = S→T 边容量和；节点在 S 付 sink cap，在 T 付 source cap。
-每步后从零重算全局能量，仅当能量下降才接受（防御实现 bug）。
+Convention: a node on the source side (S, segment==1) => b=1 (switched to alpha); on the sink side (T, segment==0) => b=0 (keeps its original label).
+Cut cost = sum of S->T edge capacities; a node on S pays the sink cap, on T pays the source cap.
+After each step the global energy is recomputed from scratch, and accepted only if the energy decreases (guards against implementation bugs).
 """
 import numpy as np
 import maxflow
@@ -12,7 +12,7 @@ def potts_energy(labels, unary, beta, H, W):
     E = float(unary[np.arange(H)[:, None], np.arange(W)[None, :], lab].sum())
     diff = 0
     for ax in (0, 1):
-        s = np.roll(lab, 1, axis=ax)  # 上/左邻居，每对无向边只计一次
+        s = np.roll(lab, 1, axis=ax)  # upper/left neighbor, each undirected edge counted once
         if ax == 0:
             s[0, :] = -1
         else:
@@ -21,10 +21,10 @@ def potts_energy(labels, unary, beta, H, W):
     return E + beta * diff
 
 def alpha_step(unary, lab, H, W, beta, alpha, max_aux=3):
-    """一次 alpha-expansion 二值步。返回能量不增的新标签。"""
+    """One binary step of alpha-expansion. Returns new labels whose energy does not increase."""
     n = H * W
     g = maxflow.Graph[float]()
-    g.add_nodes(n + 2 * n)  # 预留辅助节点（每无向边至多 1 个）
+    g.add_nodes(n + 2 * n)  # reserve auxiliary nodes (at most 1 per undirected edge)
     flat_u = unary.reshape(n, -1)
     flat_lab = np.asarray(lab).ravel()
     d0 = flat_u[np.arange(n), flat_lab].astype(float)
@@ -67,14 +67,14 @@ def alpha_step(unary, lab, H, W, beta, alpha, max_aux=3):
     g.maxflow()
     new = lab.copy()
     new = new.astype(np.int64)
-    # pymaxflow: get_segment==0 表示源侧（b=1 切到 alpha），1 表示汇侧（b=0 保持）
+    # pymaxflow: get_segment==0 means source side (b=1, switched to alpha), 1 means sink side (b=0, kept)
     new[(np.array([g.get_segment(i) for i in range(n)]) == 0).reshape(H, W)] = alpha
     if potts_energy(new, unary, beta, H, W) < potts_energy(lab, unary, beta, H, W):
         return new
     return lab.astype(np.int64)
 
 def alpha_expansion(unary, beta, max_sweeps=10, seed=0):
-    """unary: (H,W,K)。"""
+    """unary: (H,W,K)."""
     H, W, K = unary.shape
     rng = np.random.default_rng(seed)
     lab = np.argmax(unary, axis=2).astype(np.int64)

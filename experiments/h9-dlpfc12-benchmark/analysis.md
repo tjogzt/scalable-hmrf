@@ -1,22 +1,22 @@
-# H9 DLPFC 12 切片四方法基准 — 分析
+# H9 DLPFC 12-Section Four-Method Benchmark — Analysis
 
-日期：2026-10-11（批次2）｜图表：`paper/figures/fig7_dlpfc12_benchmark.{pdf,png}`、`results/h9_benchmark_{slices,summary}.csv`
+Date: 2026-10-11 (Batch 2) | Figures/tables: `figures/fig7_dlpfc12_benchmark.{pdf,png}`, `results/h9_benchmark_{slices,summary}.csv`
 
-## 设置
-- 12 个 DLPFC 切片（8 个 7 层 k=7：151507-10、151673-76；4 个 5 层 k=5：151669-72），
-  counts 与 spatialLIBD 逐位一致（自 H³MRF 缓存导出）；四方法 + oracle 参照，全部同一真值口径。
-- 各方法定案配置（经 151673 配置诊断后确定）：
-  | 方法 | 预处理/配置 | 备注 |
+## Setup
+- 12 DLPFC sections (8 with 7 layers, k=7: 151507-10, 151673-76; 4 with 5 layers, k=5: 151669-72),
+  with counts bit-for-bit identical to spatialLIBD (exported from the H³MRF cache); four methods + oracle reference, all under the same ground-truth protocol.
+- Finalized configurations for each method (fixed after the 151673 configuration diagnosis):
+  | Method | Preprocessing/configuration | Notes |
   |---|---|---|
-  | 本方法 | PC50（log1p→HVG3000→SVD→标准化）+ 六角邻接；β∈{0.3,0.5,0.7,1.0,1.5} × 5 起点 | 25 次重启总计仍在秒级 |
-  | BayesSpace | SpatialExperiment + array_col/array_row；官方 spatialCluster，nrep=1000，seed 49 | 单次运行 |
-  | SC.MEB | 官方 spatialPreprocess（15 PC）；K_set=切片真值 K；beta_grid=seq(0,4,0.2) | 单次运行；配置敏感性见下 |
-  | GraphST | 官方流程：norm→log→HVG3000→scale→训练 600e→PCA20(emb)→Mclust(EEE)→refine_label(50) | 单次运行，seed 49 |
-  | Oracle | kmeans++（真值初始化）+ HMRF 平滑，β 取该切片最优 | **管线条件参照**（非可达上限；kmeans++ 用真值也不保证恢复） |
+  | Ours | PC50 (log1p→HVG3000→SVD→standardization) + hexagonal adjacency; β∈{0.3,0.5,0.7,1.0,1.5} × 5 starts | 25 restarts in total still in the seconds range |
+  | BayesSpace | SpatialExperiment + array_col/array_row; official spatialCluster, nrep=1000, seed 49 | single run |
+  | SC.MEB | official spatialPreprocess (15 PC); K_set = section ground-truth K; beta_grid=seq(0,4,0.2) | single run; configuration sensitivity see below |
+  | GraphST | official pipeline: norm→log→HVG3000→scale→train 600e→PCA20(emb)→Mclust(EEE)→refine_label(50) | single run, seed 49 |
+  | Oracle | kmeans++ (ground-truth initialization) + HMRF smoothing, β optimal for that section | **pipeline-conditioning reference** (not an attainable ceiling; kmeans++ with ground truth does not guarantee recovery) |
 
-## 主结果（ARI，逐切片）
+## Main results (ARI, per section)
 
-| 切片 | 本方法(best) | 本方法(median) | BayesSpace | SC.MEB | GraphST | Oracle |
+| Section | Ours (best) | Ours (median) | BayesSpace | SC.MEB | GraphST | Oracle |
 |---|---|---|---|---|---|---|
 | 151507 | 0.3508 | 0.2083 | 0.4653 | 0.4250 | 0.3201 | 0.6498 |
 | 151508 | 0.3539 | 0.3004 | 0.4345 | 0.4387 | 0.3850 | 0.5148 |
@@ -31,46 +31,46 @@
 | 151671 | 0.5709 | 0.4809 | 0.5065 | 0.3555 | 0.3075 | 0.7217 |
 | 151672 | 0.6487 | 0.4968 | 0.7119 | 0.3669 | 0.2968 | 0.7019 |
 
-| 方法 | 平均ARI | SD | 中位 | 平均NMI | 中位用时 | 7层均值 | 5层均值 |
+| Method | Mean ARI | SD | Median | Mean NMI | Median time | 7-layer mean | 5-layer mean |
 |---|---|---|---|---|---|---|---|
-| **本方法(best-of-25)** | **0.4634** | 0.116 | 0.4262 | 0.569 | **8.9 s** | 0.4006 | **0.5891** |
-| 本方法(median-of-25) | 0.3210 | 0.104 | 0.3077 | — | 8.9 s | 0.2693 | 0.4246 |
-| Oracle 参照 | 0.6469 | 0.058 | 0.6448 | — | — | 0.6173 | 0.7060 |
+| **Ours (best-of-25)** | **0.4634** | 0.116 | 0.4262 | 0.569 | **8.9 s** | 0.4006 | **0.5891** |
+| Ours (median-of-25) | 0.3210 | 0.104 | 0.3077 | — | 8.9 s | 0.2693 | 0.4246 |
+| Oracle reference | 0.6469 | 0.058 | 0.6448 | — | — | 0.6173 | 0.7060 |
 | BayesSpace | 0.4287 | 0.124 | 0.4167 | 0.592 | 87.8 s | 0.4084 | 0.4695 |
 | SC.MEB | 0.3962 | 0.035 | 0.4082 | 0.508 | 76.8 s | 0.4019 | 0.3847 |
 | GraphST | 0.3088 | 0.089 | 0.3076 | 0.469 | 75.8 s | 0.3024 | 0.3216 |
 
-## 三段结论
+## Three-part conclusion
 
-**1) 精度：best-of-restarts 口径下全场第一，但中位数口径落后——瓶颈在"选"不在"算"。**
-- 本方法(best) 平均 ARI 0.4634 高于所有基线；5 层子集优势最大（0.589 vs BayesSpace 0.470）；
-  7 层子集与 BayesSpace 基本持平（0.401 vs 0.408）。
-- 但 median-of-25 仅 0.3210，低于 BayesSpace/SC.MEB——**25 次重启里的好解存在但无监督方法选定不准**，
-  与 h4d（ELBO 选错）、h7b（留出似然仅弱信号）的负结果链条一致。
-- Oracle 参照 0.6469 高出全场约 0.18-0.22 → 若初始化/选择问题解决，方法潜力在各基线之上。
-- 与 Kang 2025 (NAR) 基准区间互洽：BayesSpace 在 7 层切片领先的格局、DLPFC 难度分布均相符。
+**1) Accuracy: first place overall under the best-of-restarts protocol, but behind under the median protocol—the bottleneck is "selection", not "computation".**
+- Ours (best) has mean ARI 0.4634, higher than all baselines; the advantage is largest on the 5-layer subset (0.589 vs BayesSpace 0.470);
+  on the 7-layer subset it is roughly on par with BayesSpace (0.401 vs 0.408).
+- But median-of-25 is only 0.3210, below BayesSpace/SC.MEB—**good solutions exist among the 25 restarts but unsupervised selection cannot identify them reliably**,
+  consistent with the negative-result chain of h4d (ELBO mis-selects) and h7b (held-out likelihood only a weak signal).
+- The Oracle reference 0.6469 is ~0.18–0.22 above the whole field → if the initialization/selection problem were solved, the method's potential would exceed all baselines.
+- Mutually consistent with the benchmark range of Kang 2025 (NAR): the pattern of BayesSpace leading on 7-layer sections and the DLPFC difficulty distribution both agree.
 
-**2) 速度：全管线 8.9 s（含特征工程与 25 次重启），约为基线的 1/9–1/10，且随规模近线性。**
-- 单一"默认单跑"口径下比较：本方法 25 次全跑完仍比各基线单次快 ~9×；批1 已证 100 万 spot 规模
-  下本方法仍为秒–分钟级，而 EM/MCMC 类基线在该规模不可行（kt2 主张）。
+**2) Speed: the full pipeline runs in 8.9 s (including feature engineering and 25 restarts), roughly 1/9–1/10 of the baselines, and near-linear in scale.**
+- Compared under a single "default single-run" protocol: Ours, even running all 25 restarts to completion, is still ~9× faster than each baseline's single run; Batch 1 already showed that
+  at the 1-million-spot scale Ours remains in the seconds-to-minutes range, whereas EM/MCMC-class baselines are infeasible at that scale (the kt2 claim).
 
-**3) 诚实注意事项（写入论文将置为 Limitations）**
-- 口径不对称：本方法报 best/median 双口径（25 次重启），基线为官方默认单次；对称协议需给基线做
-  同等超参搜索（未做，显式声明）。
-- SC.MEB 配置敏感：PC50 直喂=0.186 / 前15PC=0.282 / 官方 preprocessing=0.357（151673）；
-  本文以官方配置为准，属对该方法最有利口径。
-- GraphST 聚类沿用其教程（PCA20→Mclust EEE→refine），在部分切片弱于其论文中位数（其原始环境
-  可能含数据增强选项，未启用——保守方向）。
+**3) Honest caveats (to be set as Limitations in the paper)**
+- Asymmetric protocol: Ours reports both best/median (25 restarts), while baselines are the official default single run; a symmetric protocol would require giving the baselines
+  an equivalent hyperparameter search (not done, explicitly stated).
+- SC.MEB is configuration-sensitive: feeding PC50 directly = 0.186 / first 15 PC = 0.282 / official preprocessing = 0.357 (151673);
+  this paper uses the official configuration, which is the most favorable protocol for that method.
+- GraphST clustering follows its tutorial (PCA20→Mclust EEE→refine), and on some sections is weaker than its reported median (its original environment
+  may include a data-augmentation option, not enabled—a conservative direction).
 
-## SC.MEB 配置诊断（151673）
-| 配置 | PCA 来源 | ARI |
+## SC.MEB configuration diagnosis (151673)
+| Configuration | PCA source | ARI |
 |---|---|---|
-| A | 本方法 PC50 直喂 | 0.1858 |
-| B | 本方法 PC 前 15 | 0.2816 |
-| C（采用） | 官方 spatialPreprocess（15 PC） | 0.3569 |
+| A | Ours PC50 fed directly | 0.1858 |
+| B | Ours first 15 PC | 0.2816 |
+| C (adopted) | official spatialPreprocess (15 PC) | 0.3569 |
 
-## 复现清单
-- 本方法：`code/run_ours.py all`（15 min 内全片）；特征导出 `code/export_features.py`
-- BayesSpace：`code/run_bayesspace.R all`；SC.MEB：`code/run_scmeb.R all`（官方配置 C）；GraphST：`code/run_graphst.py all`
-- 汇总：`code/aggregate.py` → `results/h9_benchmark_{slices,summary}.csv`；图：`paper/figures/make_fig7.py`
-- 环境坑与修复记录见技能 `hmrf-spatial-benchmark`（rpy2 双 BLAS 死锁、SC.MEB OpenMP/parallel bug 等）
+## Reproduction checklist
+- Ours: `code/run_ours.py all` (all sections within 15 min); feature export `code/export_features.py`
+- BayesSpace: `code/run_bayesspace.R all`; SC.MEB: `code/run_scmeb.R all` (official configuration C); GraphST: `code/run_graphst.py all`
+- Aggregation: `code/aggregate.py` → `results/h9_benchmark_{slices,summary}.csv`; figure: `figures/make_fig7.py`
+- Environment pitfalls and fixes are recorded in the skill `hmrf-spatial-benchmark` (rpy2 dual-BLAS deadlock, SC.MEB OpenMP/parallel bug, etc.)

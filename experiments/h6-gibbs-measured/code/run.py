@@ -8,13 +8,13 @@ def _find_root(_start):
     raise RuntimeError("project root not found; run inside the repository")
 _ROOT = _os.environ.get("HMRF_ROOT") or _find_root(__file__)
 # ------------------------------------------------------
-"""H6: Gibbs 基线实测（多点每扫成本 + 250K/562.5K/1M 全量锚点）——替代 h2 的外推。
+"""H6: measured Gibbs baseline (per-sweep cost at multiple sizes + 250K/562.5K/1M full anchors) -- replaces the h2 extrapolation.
 
-- 每扫成本模型：S ∈ {50,100,150,200,250,300} 实测 per-sweep（含在线计数），线性+幂律双拟合，报 R²；
-- 全量锚点：与原外推口径一致（1500 sweeps、burn=500、oracle 发射参数、beta=0.7）；
-- 在线计数版本与原 checkerboard_gibbs 语义一致（后验模态），内存 O(nK) 计数替代样本栈；
-- 预算守卫：锚点超过 budget 即停，按已测每扫成本外推并如实标注。
-用法: python run.py [smoke]
+- Per-sweep cost model: S in {50,100,150,200,250,300}, measured per-sweep (with online counting), linear + power-law fits, report R²;
+- Full anchors: same protocol as the original extrapolation (1500 sweeps, burn=500, oracle emission params, beta=0.7);
+- The online-counting version matches the original checkerboard_gibbs semantics (posterior mode), using O(nK) counts instead of a sample stack;
+- Budget guard: stop an anchor once it exceeds budget, extrapolate from the measured per-sweep cost, and label honestly.
+Usage: python run.py [smoke]
 """
 import sys, os, time, csv, json
 sys.path.insert(0, _os.path.join(_ROOT, "src"))
@@ -43,8 +43,8 @@ def build_instance(S, seed_truth=11, seed_noise=12):
 
 
 def run_gibbs_timed(log_u, beta, sweeps, burn, seed=5, budget_s=None, verbose_every=0):
-    """与原 checkerboard_gibbs 相同的每步工作量；后验模态用在线计数（内存 O(nK)）。
-    返回 (mode, total_s, achieved_sweeps, counts_sum)。"""
+    """Same per-step workload as the original checkerboard_gibbs; posterior mode via online counting (memory O(nK)).
+    Returns (mode, total_s, achieved_sweeps, counts_sum)."""
     rng = np.random.default_rng(seed)
     H, W, Kk = log_u.shape
     Y, X = np.mgrid[0:H, 0:W]
@@ -94,11 +94,11 @@ def run_gibbs_timed(log_u, beta, sweeps, burn, seed=5, budget_s=None, verbose_ev
 
 def main():
     meta = {"fit_sizes": list(FIT_SIZES), "beta": BETA, "sweeps_anchor": 1500, "burn": 500}
-    # ---------- 每扫成本（多点） ----------
+    # ---------- Per-sweep cost (multiple sizes) ----------
     cost_rows = []
     for S in FIT_SIZES:
         truth, log_u = build_instance(S, seed_truth=31, seed_noise=32)
-        _ = run_gibbs_timed(log_u, BETA, sweeps=2, burn=0, seed=9)   # 热身
+        _ = run_gibbs_timed(log_u, BETA, sweeps=2, burn=0, seed=9)   # warm-up
         mode, total, achieved, _ = run_gibbs_timed(log_u, BETA, sweeps=FIT_SWEEPS[S], burn=0, seed=9)
         per = total / achieved
         cost_rows.append(dict(S=S, n=S * S, sweeps_measured=achieved, per_sweep_s=round(per, 5), total_s=round(total, 2)))
@@ -122,14 +122,14 @@ def main():
     with open(os.path.join(OUT, "h6_sweepcost.csv"), "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(cost_rows[0].keys())); w.writeheader(); w.writerows(cost_rows)
 
-    # ---------- 全量锚点 ----------
+    # ---------- Full anchors ----------
     anchors = []
-    plans = [(500, 600), (750, 900), (1000, 1800)]  # (S, budget_s)；1500 sweeps 目标
+    plans = [(500, 600), (750, 900), (1000, 1800)]  # (S, budget_s); target 1500 sweeps
     if SMOKE:
         plans = [(500, 120)]
     for S, budget in plans:
         truth, log_u = build_instance(S)
-        sweeps = 200 if SMOKE else 1500  # 统一 1500（与 h2 外推口径一致）
+        sweeps = 200 if SMOKE else 1500  # use 1500 uniformly (matches the h2 extrapolation protocol)
         burn = int(sweeps * 500 / 1500)
         print(f"ANCHOR S={S} sweeps={sweeps} budget={budget}s start", flush=True)
         try:
@@ -144,14 +144,14 @@ def main():
             anchors.append(rec)
         except Exception as e:
             print(f"ANCHOR S={S} FAILED: {type(e).__name__} {e}", flush=True)
-        # 增量落盘
+        # incremental write
         if anchors:
             with open(os.path.join(OUT, "h6_anchors.csv"), "w", newline="") as f:
                 w = csv.DictWriter(f, fieldnames=list(anchors[0].keys())); w.writeheader(); w.writerows(anchors)
         del log_u
     meta["anchors"] = anchors
     meta["old_extrapolation_reference"] = {"S500_est_s": 204, "S1000_est_s": 817,
-                                           "note": "h2 analysis 的线性外推值，供对照"}
+                                           "note": "linear extrapolation from the h2 analysis, for reference"}
     with open(os.path.join(OUT, "h6_meta.json"), "w") as f:
         json.dump(meta, f, indent=1, ensure_ascii=False)
     print("DONE h6", flush=True)

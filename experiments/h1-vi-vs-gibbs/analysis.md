@@ -1,14 +1,13 @@
-# H1 分析：均值场变分忠实于 Gibbs 后验 ✅
+# H1 Analysis: Mean-Field Variational Inference Is Faithful to the Gibbs Posterior ✅
 
-## 结果（30x30 网格, K=5, d=20 高斯发射, oracle 参数）
-- 9 组主设置：|ARI(VI,真值) − ARI(Gibbs,真值)| ≤ 0.008；ARI(VI模态, Gibbs模态) ∈ [0.9625, 0.9830]。
-- beta 失配压力测试（真 0.5 → 模型 1.5）：两方法同步退化（0.373 vs 0.385），VI 仍跟踪 Gibbs（ARI 0.923）。
-- 速度：VI 0–3 ms（6–41 次不动点迭代）；Gibbs 0.42 s（1500 sweeps × 2 半扫）→ 当前尺度 ~200x。
-- 判定标准（≥2/3 档 |Δ|≤0.02 且 ARI(vi,gibbs)≥0.90）：**全部通过**。
+## Results (30x30 grid, K=5, d=20 Gaussian emission, oracle parameters)
+- 9 main settings: |ARI(VI, truth) − ARI(Gibbs, truth)| ≤ 0.008; ARI(VI mode, Gibbs mode) ∈ [0.9625, 0.9830].
+- beta-mismatch stress test (true 0.5 → model 1.5): both methods degrade in tandem (0.373 vs 0.385), and VI still tracks Gibbs (ARI 0.923).
+- Speed: VI 0–3 ms (6–41 fixed-point iterations); Gibbs 0.42 s (1500 sweeps × 2 half-sweeps) → ~200x at the current scale.
+- Decision criterion (≥2/3 settings with |Δ|≤0.02 and ARI(vi,gibbs)≥0.90): **all pass**.
 
-## 局限与下一步
-1. 绝对 ARI 仅 ~0.55（σ=0.8 噪声下任务本身难）→ 规模实验改用更易辨识设置（σ=0.5 / mu_scale=2.0），
-   保证"精度崩塌"可被检测出。
-2. 现为 oracle 发射参数；真实场景需 EM 联合估计 mu → 下一轮 h1b：VI-EM 联合 vs Gibbs。
-3. Gibbs 在小网格快，但 O(迭代×站点×K) 纯 numpy 在大网格上不可行 → 规模曲线由 VI 承担，Gibbs 仅作小样本参照。
-4. 计数发射（NB/ZINB）与稀疏 dropout 是百万级平台的真实挑战 → h2 主线。
+## Limitations and next steps
+1. Absolute ARI is only ~0.55 (the task is intrinsically hard under σ=0.8 noise) → switch the scale experiments to a more identifiable setting (σ=0.5 / mu_scale=2.0) so that an "accuracy collapse" would be detectable.
+2. Emission parameters are currently oracle; real scenarios require joint estimation of mu via EM → next round h1b: VI-EM joint vs Gibbs.
+3. Gibbs is fast on small grids, but O(iterations × sites × K) in pure numpy is infeasible on large grids → the scaling curve is carried by VI, with Gibbs serving only as a small-sample reference.
+4. Count emissions (NB/ZINB) and sparse dropout are the real challenges of million-scale platforms → the h2 main line.

@@ -1,17 +1,17 @@
-# ⚠ 本目录（h2-scale）数字已被 h2d 取代 — 请勿再引用
+# ⚠ The numbers in this directory (h2-scale) have been superseded by h2d — do not cite them any longer
 
-2026-10-11（审查后批次1）发现的追溯问题与处置：
+Retroactive issues found during post-review batch 1 (2026-10-11) and their handling:
 
-1. **S=750 行（核心问题）**：本目录 h2_results.csv 中 S=750 为单起点运行值（ARI 0.9627，150 迭代撞上限）；
-   当时论文脚注称"2 起点复核值 = 0.9937 / 39.8s"，但该值混用起点政策且未回写 CSV。
-   批次1 的 h2d 实验（5 实例 × 3 独立起点）查明：该实例在独立起点 seeds 3/4/5 下**三次全部落于 0.9627 稳定盆地**，
-   而 seeds 6–11 六个额外起点全部 13–16 迭代到达 0.9937。旧"复核值 0.9937"= 特定起点可达，不足以支撑"表内数字"，
-   且在 3 起点政策下该实例应如实报 0.963（9 起点中 6 个达 0.9937、3 个被困）。
+1. **S=750 row (core issue)**: In this directory's h2_results.csv, S=750 is a single-start run value (ARI 0.9627, hitting the cap at 150 iterations);
+   at the time the paper footnote claimed "restarts=2 re-check value = 0.9937 / 39.8s", but that value mixed restart policies and was never written back to the CSV.
+   The batch-1 h2d experiment (5 instances × 3 independent starts) established that this instance, under independent start seeds 3/4/5, **fell into the stable 0.9627 basin on all three runs**,
+   whereas the six additional starts (seeds 6–11) all reached 0.9937 within 13–16 iterations. The old "re-check value 0.9937" = reachable from a specific start, insufficient to support "the number in the table",
+   and under the 3-start policy this instance should honestly be reported as 0.963 (of 9 starts, 6 reach 0.9937 and 3 are trapped).
 
-2. **时间列口径**：S=1000 的 10.78s 为旧 dsh 运行时测量；h2d 在统一环境（anaconda）下重测为
-   3 起点合计 13.74s（单次中位 3.98s）。
+2. **Time-column basis**: the 10.78s for S=1000 is an old dsh runtime measurement; h2d re-measured it in a unified environment (anaconda) as
+   13.74s total for 3 starts (median single run 3.98s).
 
-3. **处置**：本目录保留为历史记录；**论文主表、提速数字、图 2 一律改用**：
-   - experiments/h2d-multiseed-metrics/（多种子 ARI/NMI/边界F1/时间）
-   - experiments/h6-gibbs-measured/（Gibbs 实测锚点与修正后提速）
-   参见两份 analysis.md。
+3. **Handling**: this directory is retained as a historical record; **the paper's main table, speedup numbers, and Figure 2 all switch to**:
+   - experiments/h2d-multiseed-metrics/ (multi-seed ARI/NMI/boundary F1/time)
+   - experiments/h6-gibbs-measured/ (measured Gibbs anchors and corrected speedups)
+   See the two analysis.md files.

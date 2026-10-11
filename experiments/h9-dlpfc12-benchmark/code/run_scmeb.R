@@ -13,8 +13,8 @@
 ROOT <- Sys.getenv("HMRF_ROOT", unset = "")
 if (ROOT == "") ROOT <- .hmrf_find_root(.hmrf_script_dir())
 # ------------------------------------------------------
-# H9: SC.MEB 基线（同管线：本方法导出的 PC50 + 同一六角邻接）
-# 用法: Rscript run_scmeb.R [slice_id | all | smoke]
+# H9: SC.MEB baseline (same pipeline: PC50 exported by this method + the same hexagonal adjacency)
+# Usage: Rscript run_scmeb.R [slice_id | all | smoke]
 suppressPackageStartupMessages({
   library(Matrix); library(SC.MEB); library(SingleCellExperiment)
   library(scuttle); library(scater); library(scran); library(BiocSingular)
@@ -41,8 +41,8 @@ nmi_fun <- function(a, b) {
 
 run_slice <- function(sid) {
   t0 <- Sys.time()
-  # 官方配置 C：SC.MEB::spatialPreprocess（counts -> lognorm -> 2000 HVG -> 15 PC）
-  # 诊断依据：151673 上 A(本方法PC50)=0.186 / B(PC15)=0.282 / C(官方预处理)=0.357
+  # Official config C: SC.MEB::spatialPreprocess (counts -> lognorm -> 2000 HVG -> 15 PC)
+  # Diagnostic evidence on 151673: A (this method, PC50)=0.186 / B (PC15)=0.282 / C (official preprocessing)=0.357
   m <- readMM(gzfile(file.path(ROOT, "data/dlpfc12", sid, "counts.mtx.gz")))
   sp <- read.csv(file.path(ROOT, "data/dlpfc12", sid, "spots.csv"), stringsAsFactors = FALSE)
   genes <- readLines(file.path(ROOT, "data/dlpfc12", sid, "genes.txt"))

@@ -13,7 +13,7 @@
 ROOT <- Sys.getenv("HMRF_ROOT", unset = "")
 if (ROOT == "") ROOT <- .hmrf_find_root(.hmrf_script_dir())
 # ------------------------------------------------------
-# SC.MEB 配置诊断（151673）：A=PC50(已跑) B=PC前15 C=SC.MEB官方spatialPreprocess(其在counts上自算15PC)
+# SC.MEB config diagnostics (151673): A=PC50 (already run), B=first 15 PCs, C=SC.MEB official spatialPreprocess (computes its own 15 PCs from counts)
 suppressPackageStartupMessages({
   library(Matrix); library(SingleCellExperiment); library(SpatialExperiment); library(SC.MEB)
 })
@@ -26,13 +26,13 @@ truth <- read.csv(file.path(FEAT, sprintf("%s_truth.csv", sid)))$truth
 n <- nrow(pc); k <- length(unique(truth))
 D <- sparseMatrix(i = edges[, 1], j = edges[, 2], x = 1, dims = c(n, n))
 
-# B: 前 15 个 PC
+# B: first 15 PCs
 resB <- SC.MEB(y = pc[, 1:15], Adj_sp = D, K_set = c(k), beta_grid = seq(0, 4, 0.2),
                parallel = TRUE, num_core = 5, PX = TRUE, maxIter_ICM = 10, maxIter = 50)
 ariB <- mclust::adjustedRandIndex(truth, as.vector(resB[[1]]))
 cat(sprintf("B(PC1-15): ARI=%.4f\n", ariB))
 
-# C: 官方 spatialPreprocess（counts -> lognorm -> 2000 HVG -> 15 PC）
+# C: official spatialPreprocess (counts -> lognorm -> 2000 HVG -> 15 PC)
 m <- readMM(gzfile(file.path(ROOT, "data/dlpfc12", sid, "counts.mtx.gz")))
 sp <- read.csv(file.path(ROOT, "data/dlpfc12", sid, "spots.csv"), stringsAsFactors = FALSE)
 genes <- readLines(file.path(ROOT, "data/dlpfc12", sid, "genes.txt"))

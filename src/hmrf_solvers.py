@@ -1,8 +1,8 @@
-"""HMRF 推断求解器：均值场变分（快）与 Checkerboard-Gibbs（参照），+ ARI。"""
+"""HMRF inference solvers: mean-field variational (fast) and checkerboard Gibbs (reference), + ARI."""
 import numpy as np
 
 def _neighbor_sum_grid(q, K):
-    """q: (H,W,K) 概率场；返回各点 4-邻域 q 之和（同形状）。"""
+    """q: (H,W,K) probability field; returns the sum of q over each point's 4-neighborhood (same shape)."""
     s = np.zeros_like(q)
     for ax, sgn in [(0, 1), (0, -1), (1, 1), (1, -1)]:
         t = np.roll(q, sgn, axis=ax)
@@ -16,7 +16,7 @@ def _neighbor_sum_grid(q, K):
     return s
 
 def mean_field_potts(log_u, beta, max_iter=500, tol=1e-5):
-    """均值场不动点：log q_i(k) ∝ log_u[i,k] + beta * sum_{j~i} q_j(k)。返回 q, 迭代数。"""
+    """Mean-field fixed point: log q_i(k) ∝ log_u[i,k] + beta * sum_{j~i} q_j(k). Returns q, iteration count."""
     H, W, K = log_u.shape
     log_u = log_u - log_u.max(axis=2, keepdims=True)
     q = np.exp(log_u)
@@ -34,7 +34,7 @@ def mean_field_potts(log_u, beta, max_iter=500, tol=1e-5):
     return q, max_iter
 
 def checkerboard_gibbs(log_u, beta, sweeps=2000, burn=500, rng=None, seed=0):
-    """块 Gibbs 采样 Potts 后验；返回后验模态标签、每样本标签(用于均值 ARI)、耗时估计在调用方。"""
+    """Block Gibbs sampling of the Potts posterior; returns the posterior mode labels and the per-sample labels (for mean ARI); timing is estimated by the caller."""
     rng = rng or np.random.default_rng(seed)
     H, W, K = log_u.shape
     Y, X = np.mgrid[0:H, 0:W]
@@ -73,27 +73,27 @@ def checkerboard_gibbs(log_u, beta, sweeps=2000, burn=500, rng=None, seed=0):
     return mode, samples
 
 def gaussian_log_unaries(y2d, mu, sigma):
-    """y2d:(n,d) mu:(K,d) -> (n,K) 高斯 log 似然（常数项保留）。"""
+    """y2d:(n,d) mu:(K,d) -> (n,K) Gaussian log-likelihood (constant term retained)."""
     d = y2d.shape[1]
     s2 = float(sigma) ** 2
     ysq = (y2d ** 2).sum(1, keepdims=True)
     return -0.5 * d * np.log(2 * np.pi * s2) - (ysq - 2 * y2d @ mu.T + (mu ** 2).sum(1)[None, :]) / (2 * s2)
 
 def nb_log_unaries(y2d, mu, disp):
-    """NB 发射一元项（去掉与 k 无关的常数项，不影响 softmax/M 步）。"""
+    """NB emission unary terms (drop the constant term independent of k; does not affect softmax/M-step)."""
     logm = np.log(np.asarray(mu, dtype=np.float64))
     logdm = np.log(disp + mu)
     return y2d @ (logm.T - logdm.T) + disp * (y2d.shape[1] * np.log(disp) - logdm.sum(1))[None, :]
 
 def em_mf_gaussian(y2d, K, beta, H, W, max_iter=200, tol=1e-4, restarts=3, sigma_floor=0.2, seed=0, use_f32=False):
-    """VI-EM 联合估计 mu/sigma 与标签后验（多起点，ELBO 选优）。返回 (q, mu, sigma, iters, elbo)。"""
+    """VI-EM jointly estimates mu/sigma and the label posterior (multiple restarts, best ELBO selected). Returns (q, mu, sigma, iters, elbo)."""
     rng = np.random.default_rng(seed)
     y2d32 = y2d.astype(np.float32) if use_f32 else y2d
     best = None
     for r in range(restarts):
         lab = rng.integers(0, K, size=(H, W))
         mu = np.zeros((K, y2d.shape[1]), dtype=np.float64)
-        for _ in range(5):  # kmeans-lite 硬 EM
+        for _ in range(5):  # kmeans-lite hard EM
             for k in range(K):
                 m = lab.ravel() == k
                 mu[k] = y2d[m].mean(axis=0) if m.any() else rng.standard_normal(y2d.shape[1])
@@ -125,7 +125,7 @@ def em_mf_gaussian(y2d, K, beta, H, W, max_iter=200, tol=1e-4, restarts=3, sigma
             new = np.exp(logq); new /= new.sum(axis=2, keepdims=True)
             dq = np.abs(new - q).max()
             q = new
-            # M 步（内存友好：||y-mu||^2 用 ysq 恒等式展开）
+            # M-step (memory-friendly: expand ||y-mu||^2 via the ysq identity)
             if use_f32:
                 w = q.reshape(-1, K).astype(np.float32)
                 mu = (w.T @ y2d32) / (w.sum(0)[:, None] + 1e-12)
@@ -142,7 +142,7 @@ def em_mf_gaussian(y2d, K, beta, H, W, max_iter=200, tol=1e-4, restarts=3, sigma
                 log_u = gaussian_log_unaries(y2d, mu, sigma).reshape(H, W, K)
             if dq < tol and it > 10:
                 break
-        # ELBO（用于选优）
+        # ELBO (used for selection)
         e_logp = (q.reshape(-1, K) * log_u.reshape(-1, K)).sum()
         nbr = _neighbor_sum_grid(q, K)
         e_prior = 0.5 * beta * (q * nbr).sum()
@@ -153,7 +153,7 @@ def em_mf_gaussian(y2d, K, beta, H, W, max_iter=200, tol=1e-4, restarts=3, sigma
     return best[1], best[2], best[3], best[4], best[0]
 
 def em_mf_nb(y2d, K, beta, H, W, disp=1.0, max_iter=150, tol=1e-4, seed=0, rng=None, init_log1p=True):
-    """NB 发射 VI-EM（disp 固定）；返回 (q, mu, iters)。"""
+    """NB-emission VI-EM (disp fixed); returns (q, mu, iters)."""
     rng = rng if rng is not None else np.random.default_rng(seed)
     lab = rng.integers(0, K, size=(H, W))
     mu = np.zeros((K, y2d.shape[1]), dtype=np.float64)
@@ -178,7 +178,7 @@ def em_mf_nb(y2d, K, beta, H, W, disp=1.0, max_iter=150, tol=1e-4, seed=0, rng=N
                 else: t[:, -1, :] = 0.0
             nbr += t
         lab = np.argmax(log_u + beta * nbr, axis=2)
-    # 硬 EM 后用原始计数重估 mu（初始化只负责标签形态）
+    # After hard EM, re-estimate mu from the raw counts (initialization only shapes the labels)
     for k in range(K):
         m = lab.ravel() == k
         mu[k] = y2d[m].mean(axis=0) if m.any() else 0.5 + rng.random(y2d.shape[1])
@@ -201,7 +201,7 @@ def em_mf_nb(y2d, K, beta, H, W, disp=1.0, max_iter=150, tol=1e-4, seed=0, rng=N
     return q, mu, it + 1, obj
 
 def em_mf_nb_restarts(y2d, K, beta, H, W, disp=1.0, max_iter=300, tol=1e-3, restarts=3, seed=0):
-    """多起点 NB VI-EM，按目标值选优。返回 (q, mu, iters, obj)。"""
+    """Multi-restart NB VI-EM, best selected by the objective value. Returns (q, mu, iters, obj)."""
     rng = np.random.default_rng(seed)
     best = None
     for r in range(restarts):
@@ -211,10 +211,10 @@ def em_mf_nb_restarts(y2d, K, beta, H, W, disp=1.0, max_iter=300, tol=1e-3, rest
             best = (obj, q, mu, iters)
     return best[1], best[2], best[3], best[0]
 
-# ---------- 图结构版（任意邻接，供真实数据空洞网格使用） ----------
+# ---------- graph-structured version (arbitrary adjacency, for real-data grids with holes) ----------
 
 def _nbr_sum_edges(q2d, edges):
-    """q2d:(n,K)；返回各节点邻居 q 之和。edges: (E,2) 有向（已含双向）。"""
+    """q2d:(n,K); returns the sum of neighbor q per node. edges: (E,2) directed (both directions already included)."""
     n, K = q2d.shape
     out = np.zeros_like(q2d)
     np.add.at(out, edges[:, 0], q2d[edges[:, 1]])
@@ -236,14 +236,14 @@ def mean_field_graph(log_u2d, beta, edges, max_iter=500, tol=1e-5):
 
 def em_mf_gaussian_graph(y2d, K, beta, edges, max_iter=300, tol=1e-4, restarts=3,
                          sigma_floor=0.2, seed=0, init_labels=None):
-    """图结构版 VI-EM（高斯发射），返回 (q, mu, sigma, iters, elbo)。可传 init_labels 定起点。"""
+    """Graph-structured VI-EM (Gaussian emission); returns (q, mu, sigma, iters, elbo). init_labels can be passed to fix the starting point."""
     n, d = y2d.shape
     rng = np.random.default_rng(seed)
     best = None
     for r in range(restarts):
         lab = np.asarray(init_labels, dtype=np.int64).copy() if init_labels is not None else rng.integers(0, K, size=n)
         mu = np.zeros((K, d), dtype=np.float64)
-        if init_labels is None:  # 仅随机起点时做硬 EM 定形态；外部起点直接进入软 EM
+        if init_labels is None:  # hard-EM shaping only for random starts; external starts go straight to soft EM
             for _ in range(5):
                 for k in range(K):
                     m = lab == k
@@ -257,7 +257,7 @@ def em_mf_gaussian_graph(y2d, K, beta, edges, max_iter=300, tol=1e-4, restarts=3
             m = lab == k
             mu[k] = y2d[m].mean(axis=0) if m.any() else rng.standard_normal(d)
         log_u = gaussian_log_unaries(y2d, mu, 1.0)
-        sigma_cap = float(np.sqrt((y2d ** 2).mean())) if (y2d ** 2).mean() > 0 else 1.0  # 类内方差 <= 总方差
+        sigma_cap = float(np.sqrt((y2d ** 2).mean())) if (y2d ** 2).mean() > 0 else 1.0  # within-class variance <= total variance
         q = np.exp(log_u - log_u.max(axis=1, keepdims=True)); q /= q.sum(axis=1, keepdims=True)
         sigma = 1.0
         for it in range(max_iter):
@@ -282,7 +282,7 @@ def em_mf_gaussian_graph(y2d, K, beta, edges, max_iter=300, tol=1e-4, restarts=3
     return best[1], best[2], best[3], best[4], best[0]
 
 def adjusted_rand_index(labels_true, labels_pred):
-    """标准 ARI（contingency 实现）。"""
+    """Standard ARI (contingency-based implementation)."""
     from collections import Counter
     a = np.asarray(labels_true).ravel(); b = np.asarray(labels_pred).ravel()
     ct = Counter(zip(a.tolist(), b.tolist()))

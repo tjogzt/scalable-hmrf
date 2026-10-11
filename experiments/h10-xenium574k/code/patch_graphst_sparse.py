@@ -1,12 +1,12 @@
-"""GraphST 稀疏补丁（3 处，HMRF-bench 专用）。
-背景：GraphST 1.1.1 的图构造与 graph_neigh 消费为稠密 n×n 实现——574K 细胞需 2.6 TB，
-physically impossible。本补丁在保持边语义完全一致的前提下改用 scipy.sparse / torch.sparse：
-  P1 preprocess.py: construct_interaction_KNN → 稀疏构建（graph_neigh=有向 kNN，adj=对称二值）
-  P2 GraphST.py __init__: graph_neigh 稠密 (+eye) 行 → 稀疏分支（dense 输入走原逻辑不变）
-  P3 model.py AvgReadout.forward: mask 稠密 mm → 稀疏分支
-影响范围：仅 datatype∈{Stereo,Slide} 的大图路径；'10X'(DLPFC) 路径行为不变（已对 DLPFC 复跑验证）。
-重装 GraphST 后需重新执行本脚本（幂等：已打补丁再跑无副作用，会提示 anchor 不匹配则跳过）。
-用法: /opt/anaconda3/bin/python3 patch_graphst_sparse.py
+"""GraphST sparse patch (3 places, HMRF-bench specific).
+Background: GraphST 1.1.1 builds the graph and consumes graph_neigh with dense n x n arrays -- 574K cells would need 2.6 TB,
+physically impossible. This patch switches to scipy.sparse / torch.sparse while keeping edge semantics exactly identical:
+  P1 preprocess.py: construct_interaction_KNN -> sparse construction (graph_neigh=directed kNN, adj=symmetric binary)
+  P2 GraphST.py __init__: dense graph_neigh (+eye) line -> sparse branch (dense input keeps the original logic)
+  P3 model.py AvgReadout.forward: dense mask mm -> sparse branch
+Scope: only the large-graph path with datatype in {Stereo,Slide}; the '10X' (DLPFC) path is unchanged (re-verified on DLPFC).
+Re-run this script after reinstalling GraphST (idempotent: re-running an already patched install has no side effects; skips when an anchor does not match).
+Usage: /opt/anaconda3/bin/python3 patch_graphst_sparse.py
 """
 import shutil, re, sys
 

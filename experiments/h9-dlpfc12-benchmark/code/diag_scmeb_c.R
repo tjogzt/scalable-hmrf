@@ -13,7 +13,7 @@
 ROOT <- Sys.getenv("HMRF_ROOT", unset = "")
 if (ROOT == "") ROOT <- .hmrf_find_root(.hmrf_script_dir())
 # ------------------------------------------------------
-# C 配置修复版：SC.MEB 官方 spatialPreprocess（显式加载其内部依赖的命名空间）
+# Fixed version of config C: SC.MEB official spatialPreprocess (explicitly load the namespaces its internals depend on)
 suppressPackageStartupMessages({
   library(Matrix); library(SingleCellExperiment); library(SC.MEB)
   library(scuttle); library(scater); library(scran); library(BiocSingular)

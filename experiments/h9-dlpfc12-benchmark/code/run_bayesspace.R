@@ -13,8 +13,8 @@
 ROOT <- Sys.getenv("HMRF_ROOT", unset = "")
 if (ROOT == "") ROOT <- .hmrf_find_root(.hmrf_script_dir())
 # ------------------------------------------------------
-# H9: BayesSpace 基线（12 切片 DLPFC，标准流程 spatialPreprocess + spatialCluster）
-# 用法: Rscript run_bayesspace.R [slice_id | all]
+# H9: BayesSpace baseline (12 DLPFC slices, standard pipeline spatialPreprocess + spatialCluster)
+# Usage: Rscript run_bayesspace.R [slice_id | all]
 suppressPackageStartupMessages({
   library(SingleCellExperiment); library(SpatialExperiment); library(Matrix); library(BayesSpace)
 })

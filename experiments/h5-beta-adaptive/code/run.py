@@ -8,7 +8,7 @@ def _find_root(_start):
     raise RuntimeError("project root not found; run inside the repository")
 _ROOT = _os.environ.get("HMRF_ROOT") or _find_root(__file__)
 # ------------------------------------------------------
-"""H5: beta 自适应（ELBO 网格选择）——NB 与高斯场景对照。"""
+"""H5: beta adaptivity (ELBO grid selection) -- NB vs Gaussian scenario comparison."""
 import sys, time, csv
 sys.path.insert(0, _os.path.join(_ROOT, "src"))
 import numpy as np
@@ -18,7 +18,7 @@ from hmrf_solvers import em_mf_gaussian, em_mf_nb_restarts, adjusted_rand_index
 S, K, d = 250, 8, 20
 GRID = (0.3, 0.5, 0.7, 1.0, 1.3, 1.7)
 rows = []
-# 高斯场景
+# Gaussian scenario
 truth = gaussian_rf_domains(S, K, seed=11)
 y, mu_true = gaussian_emission(truth, K, d, mu_scale=2.0, sigma=0.5, seed=12)
 y2d = y.reshape(-1, d).astype(np.float64)
@@ -31,7 +31,7 @@ for b in GRID:
         best = (b, ari, elbo)
 print("GAUSS per-beta:", [(b, round(a,3)) for b,a,e in per])
 print("GAUSS ELBO-selected:", best[0], "ARI", round(best[1],4))
-# NB 场景
+# NB scenario
 FACTORS = [0.8, 1.1, 1.5, 2.0, 2.7, 3.7, 5.0, 6.8]
 truth = gaussian_rf_domains(S, K, seed=41)
 y, mu_true = nb_emission_domains(truth, d=d, factors=FACTORS, disp=3.0, base_scale=1.0, seed=42)

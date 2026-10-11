@@ -13,12 +13,12 @@
 ROOT <- Sys.getenv("HMRF_ROOT", unset = "")
 if (ROOT == "") ROOT <- .hmrf_find_root(.hmrf_script_dir())
 # ------------------------------------------------------
-# H9: 从 H³MRF 缓存的 DLPFC SCE 导出 12 切片为通用格式（供 Scalable-HMRF 基准）
-# 输出: data/dlpfc12/<sample>/{counts.mtx.gz, spots.csv, genes.txt}
+# H9: export the 12 slices from the cached H³MRF DLPFC SCE to a generic format (for the Scalable-HMRF benchmark)
+# Output: data/dlpfc12/<sample>/{counts.mtx.gz, spots.csv, genes.txt}
 suppressPackageStartupMessages({library(SingleCellExperiment); library(Matrix)})
 
 CACHE <- Sys.getenv("HMRF_DLPFC_CACHE", unset = "")
-if (CACHE == "" || !file.exists(CACHE)) stop("请设置 HMRF_DLPFC_CACHE 指向 dlpfc_sce_cache.rds（见 README）")
+if (CACHE == "" || !file.exists(CACHE)) stop("please set HMRF_DLPFC_CACHE to point at dlpfc_sce_cache.rds (see README)")
 OUT <- file.path(ROOT, "data/dlpfc12")
 dir.create(OUT, recursive = TRUE, showWarnings = FALSE)
 

@@ -8,12 +8,12 @@ def _find_root(_start):
     raise RuntimeError("project root not found; run inside the repository")
 _ROOT = _os.environ.get("HMRF_ROOT") or _find_root(__file__)
 # ------------------------------------------------------
-"""H10: GraphST 基线 @ Xenium Breast IDC（smoke=50K 子样 / full=574K 全量）
-- 官方流程：log1p(CP10K) → scale → GraphST(datatype='10x', n=6 kNN 图, 600 epochs) →
-  PCA20(emb) → Mclust(EEE) → 50-NN 多数投票 refinement
-- 注：原生 GraphST.utils.refine_label 会构 574K×574K 全对距离矩阵（不可行），
-  此处以 cKDTree 50-NN 多数投票等价实现（语义：半径内 50 邻居标签众数）。
-用法: python run_graphst_xenium.py smoke|full
+"""H10: GraphST baseline @ Xenium Breast IDC (smoke=50K subsample / full=574K full data)
+- Official pipeline: log1p(CP10K) -> scale -> GraphST(datatype='10x', n=6 kNN graph, 600 epochs) ->
+  PCA20(emb) -> Mclust(EEE) -> 50-NN majority-vote refinement
+- Note: the native GraphST.utils.refine_label builds a 574K x 574K all-pairs distance matrix (infeasible);
+  here it is implemented equivalently with a cKDTree 50-NN majority vote (semantics: mode of the labels of the 50 nearest neighbors).
+Usage: python run_graphst_xenium.py smoke|full
 """
 import sys, os, time, csv, json
 import numpy as np
@@ -24,7 +24,7 @@ os.environ.setdefault("CUDA_VISIBLE_DEVICES", "")
 ROOT = _ROOT
 XEN = _os.environ.get("HMRF_XENIUM_DIR", "")
 if not XEN or not _os.path.isdir(XEN):
-    raise SystemExit("环境变量 HMRF_XENIUM_DIR 未设置或无效：请指向 Xenium outs 目录（10x Genomics 公开数据，见 README）")
+    raise SystemExit("env var HMRF_XENIUM_DIR is unset or invalid: point it at the Xenium outs directory (10x Genomics public data, see README)")
 OUT = os.path.join(ROOT, "experiments/h10-xenium574k/results")
 os.makedirs(OUT, exist_ok=True)
 MODE = sys.argv[1] if len(sys.argv) > 1 else "smoke"
@@ -33,7 +33,7 @@ K = 8
 
 
 def mclust_labels(X, n_clusters, model_names="EEE", seed=2020):
-    """经 Rscript 子进程调用 Mclust（进程内 rpy2 会触发双 OpenBLAS 死锁）。"""
+    """Calls Mclust via an Rscript subprocess (in-process rpy2 triggers a double-OpenBLAS deadlock)."""
     import tempfile, subprocess
     with tempfile.TemporaryDirectory() as td:
         xf = os.path.join(td, "X.csv"); of = os.path.join(td, "labels.csv")
@@ -52,10 +52,10 @@ def mclust_labels(X, n_clusters, model_names="EEE", seed=2020):
 
 
 def refine_knn(labels, coords, k=50):
-    """50-NN 多数投票（等价 GraphST refine_label 语义，免全对距离矩阵）。"""
+    """50-NN majority vote (equivalent to GraphST refine_label semantics, avoids the all-pairs distance matrix)."""
     from scipy.spatial import cKDTree
     tree = cKDTree(coords)
-    _, idx = tree.query(coords, k=k + 1)   # 含自身
+    _, idx = tree.query(coords, k=k + 1)   # includes self
     neigh = labels[idx[:, 1:]]             # (n, 50)
     out = np.empty_like(labels)
     for i in range(len(labels)):
@@ -89,7 +89,7 @@ ad.obsm["spatial"] = coords
 sc.pp.normalize_total(ad, target_sum=1e4)
 sc.pp.log1p(ad)
 sc.pp.scale(ad, max_value=10)
-ad.var["highly_variable"] = True   # 跳过 GraphST 内部 seurat_v3 HVG（280 基因 < 3000 会触发 loess 外推错误）
+ad.var["highly_variable"] = True   # skip GraphST's internal seurat_v3 HVG (280 genes < 3000 triggers a loess extrapolation error)
 print(f"preprocessed {time.time()-t0:.1f}s", flush=True)
 
 from GraphST import GraphST

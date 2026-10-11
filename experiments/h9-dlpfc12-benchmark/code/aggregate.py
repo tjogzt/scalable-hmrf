@@ -8,10 +8,10 @@ def _find_root(_start):
     raise RuntimeError("project root not found; run inside the repository")
 _ROOT = _os.environ.get("HMRF_ROOT") or _find_root(__file__)
 # ------------------------------------------------------
-"""H9 汇总：把 本方法/BayesSpace/SC.MEB/GraphST 的 12 切片结果合并成基准表。
-输出:
-  results/h9_benchmark_slices.csv  - 每切片每方法的 ARI/NMI/时间
-  results/h9_benchmark_summary.csv - 方法级 mean±sd（全体 + 7层子集 + 5层子集）
+"""H9 aggregation: merge the 12-slice results of Ours/BayesSpace/SC.MEB/GraphST into a benchmark table.
+Output:
+  results/h9_benchmark_slices.csv  - per-slice, per-method ARI/NMI/time
+  results/h9_benchmark_summary.csv - method-level mean±sd (all + 7-layer subset + 5-layer subset)
 """
 import os
 import numpy as np
@@ -49,7 +49,7 @@ add_baseline(os.path.join(RES, "graphst/graphst_all.csv"), "GraphST")
 
 tab = pd.DataFrame(rows)
 tab.to_csv(os.path.join(RES, "h9_benchmark_slices.csv"), index=False)
-print("\n=== 每切片 ARI 透视 ===")
+print("\n=== Per-slice ARI pivot ===")
 piv = tab.pivot_table(index="slice", columns="method", values="ari")
 print(piv.round(4).to_string())
 
@@ -63,6 +63,6 @@ for m, g in tab.groupby("method", sort=False):
     summ.append(rec)
 summ = pd.DataFrame(summ)
 summ.to_csv(os.path.join(RES, "h9_benchmark_summary.csv"), index=False)
-print("\n=== 方法级汇总 ===")
+print("\n=== Method-level summary ===")
 print(summ.to_string(index=False))
 print("\nAGG DONE")

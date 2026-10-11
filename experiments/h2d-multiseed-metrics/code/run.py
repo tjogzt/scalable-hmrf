@@ -8,13 +8,13 @@ def _find_root(_start):
     raise RuntimeError("project root not found; run inside the repository")
 _ROOT = _os.environ.get("HMRF_ROOT") or _find_root(__file__)
 # ------------------------------------------------------
-"""H2d: 多种子规模曲线 + NMI/边界F1 补全（统一 restarts=3（max_iter=300）、每起点分别记录）。
+"""H2d: multi-seed scale curves + NMI/boundary-F1 completion (uniform restarts=3 (max_iter=300), each restart recorded separately).
 
-设计（回应审查意见）：
-- 5 个独立实例种子 × 5 个规模档 × 3 起点；报 mean±sd、max、median、ELBO 选择值；
-- 指标补全：NMI（算术平均归一化）+ 边界 F1（严格边集：相邻域对的集合 F1）；
-- 全部数字落 CSV（长表 + 汇总表），修复"复核值未回写"的追溯问题。
-用法: python run.py [smoke]
+Design (addressing review comments):
+- 5 independent instance seeds x 5 scale levels x 3 restarts; report mean±sd, max, median, ELBO-selected value;
+- metric completion: NMI (arithmetic-mean normalization) + boundary F1 (strict edge set: set F1 over adjacent domain pairs);
+- all numbers written to CSV (long table + summary table), fixing the traceability issue of "review values not written back".
+Usage: python run.py [smoke]
 """
 import sys, os, time, csv, resource
 sys.path.insert(0, _os.path.join(_ROOT, "src"))
@@ -34,7 +34,7 @@ os.makedirs(OUT, exist_ok=True)
 
 
 def nmi(a, b, k):
-    """NMI（arithmetic-mean 归一化，与 sklearn 默认一致）。"""
+    """NMI (arithmetic-mean normalization, same as the sklearn default)."""
     a = np.asarray(a).ravel().astype(np.int64); b = np.asarray(b).ravel().astype(np.int64)
     ct = np.bincount(a * k + b, minlength=k * k).reshape(k, k).astype(np.float64)
     n = ct.sum(); p = ct / n
@@ -50,7 +50,7 @@ def nmi(a, b, k):
 
 
 def grid_edges(S):
-    """无向网格边（右邻 + 下邻），整数 id。"""
+    """Undirected grid edges (right neighbor + down neighbor), integer id."""
     idx = np.arange(S * S, dtype=np.int64).reshape(S, S)
     e0 = np.concatenate([idx[:, :-1].ravel(), idx[:-1, :].ravel()])
     e1 = np.concatenate([idx[:, 1:].ravel(), idx[1:, :].ravel()])
@@ -58,7 +58,7 @@ def grid_edges(S):
 
 
 def boundary_f1(pred, true, e0, e1):
-    """严格边集 F1：边界边 = 两端点标签不同的相邻对。"""
+    """Strict edge-set F1: boundary edges = adjacent pairs whose endpoint labels differ."""
     bp = pred.ravel()[e0] != pred.ravel()[e1]
     bt = true.ravel()[e0] != true.ravel()[e1]
     den = int(bp.sum()) + int(bt.sum())
@@ -116,7 +116,7 @@ def main():
             rows.append(row)
             print("INSTANCE", row, flush=True)
     f_long.close()
-    # 汇总表（按 S 跨实例聚合）
+    # summary table (aggregated across instances per S)
     sum_path = os.path.join(OUT, "h2d_summary.csv")
     with open(sum_path, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=["S", "n", "n_inst",

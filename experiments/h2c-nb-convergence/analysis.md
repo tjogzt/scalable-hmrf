@@ -1,17 +1,17 @@
-# H2c 分析：NB VI-EM 收敛改进
+# H2c Analysis: NB VI-EM Convergence Improvements
 
-## 变更
-- log1p+按基因标准化初始化（仅用于硬 EM 定形态，随后从原始计数重估 mu）
-- 3 起点按 ELBO 选优；tol 1e-3、max_iter 300。
+## Changes
+- log1p + per-gene standardized initialization (used only for the hard-EM mode determination; mu is then re-estimated from the raw counts)
+- 3 starts selected by ELBO; tol 1e-3, max_iter 300.
 
-## 结果（oracle 上限 0.857/0.868，oracle 固定 beta=0.7）
+## Results (oracle ceiling 0.857/0.868, oracle with fixed beta=0.7)
 | S | beta=0.5 | beta=0.7 | beta=1.0 | oracle@0.7 |
 |---|---|---|---|---|
 | 250 | 0.491 | 0.667 | 0.740 | 0.857 |
 | 500 | 0.514 | 0.713 | **0.890** | 0.868 |
 
-## 发现
-1. NB 场景最优 beta 明显高于高斯场景（0.7→1.0+）：弱一元项需要更强的空间先验——方向二在真实数据上应做 beta 自适应/网格化（衔接综述"平滑参数全局固定"痛点）。
-2. 多起点+log1p 初始化把 S=500 的 VI-EM 推到 0.890，反超固定-beta 的 oracle（oracle 未调 beta，不构成天花板矛盾；但说明"oracle 上限"须按 beta 网格定义）。
-3. S=250 仍有 0.12 差距：小网格 + 高零比例的局部最优更顽固；可再试 beta=1.2-1.5、更多起点（成本低）。
-4. 结论：NB 路径可用；论文中"计数发射 + VI-EM"章节的证据链齐备。
+## Findings
+1. The optimal beta in the NB scenario is clearly higher than in the Gaussian scenario (0.7→1.0+): weak unary terms need a stronger spatial prior — on real data Direction Two should perform beta adaptation/gridding (connecting to the review's pain point that "the smoothing parameter is globally fixed").
+2. Multiple starts + log1p initialization pushed S=500 VI-EM to 0.890, surpassing the fixed-beta oracle (the oracle did not tune beta, so this is not a ceiling contradiction; but it shows that the "oracle ceiling" must be defined over a beta grid).
+3. S=250 still has a 0.12 gap: small grids + high zero fractions make local optima more stubborn; one can try beta=1.2-1.5 and more starts (low cost).
+4. Conclusion: the NB path is usable; the evidence chain for the paper's "count emission + VI-EM" section is complete.

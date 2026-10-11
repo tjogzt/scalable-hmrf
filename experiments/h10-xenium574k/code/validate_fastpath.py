@@ -8,8 +8,8 @@ def _find_root(_start):
     raise RuntimeError("project root not found; run inside the repository")
 _ROOT = _os.environ.get("HMRF_ROOT") or _find_root(__file__)
 # ------------------------------------------------------
-"""H10 验证 v2：严格复刻 run.py smoke 子集（rng49, 50K），
-ORIGINAL（np.add.at, 有向边=每无向边恰一次双向）vs FAST（对称稀疏邻居和）等价性。"""
+"""H10 validation v2: strictly replicates the run.py smoke subset (rng49, 50K),
+checking equivalence of ORIGINAL (np.add.at, directed edges = each undirected edge exactly once per direction) vs FAST (symmetric sparse neighbor sum)."""
 import sys, os, time
 import numpy as np
 import pandas as pd
@@ -19,7 +19,7 @@ from scipy.spatial import cKDTree
 ROOT = _ROOT
 XEN = _os.environ.get("HMRF_XENIUM_DIR", "")
 if not XEN or not _os.path.isdir(XEN):
-    raise SystemExit("环境变量 HMRF_XENIUM_DIR 未设置或无效：请指向 Xenium outs 目录（10x Genomics 公开数据，见 README）")
+    raise SystemExit("env var HMRF_XENIUM_DIR is unset or invalid: point it at the Xenium outs directory (10x Genomics public data, see README)")
 sys.path.insert(0, os.path.join(ROOT, "src"))
 from hmrf_solvers import em_mf_gaussian_graph, gaussian_log_unaries, adjusted_rand_index
 
@@ -47,11 +47,11 @@ PC = (Y @ V).astype(np.float32); PC -= PC.mean(0, keepdims=True); PC /= (PC.std(
 
 tree = cKDTree(coords); dist, nn = tree.query(coords, k=7)
 nn_idx = nn[:, 1:]
-# 无向唯一边 → 双向有向表（每边恰好两次，规范约定）
+# Unique undirected edges -> bidirectional directed table (each edge exactly twice, canonical convention)
 E = np.unique(np.stack([np.minimum(np.repeat(np.arange(N), 6), nn_idx.ravel()),
                         np.maximum(np.repeat(np.arange(N), 6), nn_idx.ravel())], 1), axis=0)
 edges = np.vstack([E, E[:, ::-1]])
-# 对称稀疏
+# Symmetric sparse
 sym = sp.coo_matrix((np.ones(N * 6, np.int8), (np.repeat(np.arange(N), 6), nn_idx.ravel())), shape=(N, N)).tocsr()
 sym = ((sym + sym.T) > 0).astype(np.float32).tocsr()
 print(f"n={N} undirected={len(E)} directed={len(edges)} symnnz={sym.nnz}")

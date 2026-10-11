@@ -8,13 +8,13 @@ def _find_root(_start):
     raise RuntimeError("project root not found; run inside the repository")
 _ROOT = _os.environ.get("HMRF_ROOT") or _find_root(__file__)
 # ------------------------------------------------------
-"""H10: Xenium Breast IDC 574K 细胞全量规模实测（批次3，真实单细胞分辨率平台）。
-用法: python run.py smoke | full
-- 数据: 10x Genomics 官方发布 Xenium FFPE Human Breast IDC（环境变量 HMRF_XENIUM_DIR 指向其 outs 目录）
-- 特征: log1p(CP10K) → z-score → PCA30（本方法管线；Xenium 面板 313 基因无需 HVG）
-- 空间图: cKDTree kNN(k=6)。常规 kNN 结构下邻居和 = q[nn].sum(1)（免 np.add.at 慢路径）
-- MF-VI: 本地快速实现（与 src/hmrf_solvers.em_mf_gaussian_graph 同数学，仅邻居和向量化不同）
-- 参照: 10x 官方 graphclust(25 簇) 与 kmeans_8（reference clustering，非生物学金标准）
+"""H10: full-scale test on 574K cells from Xenium Breast IDC (batch 3, real single-cell resolution platform).
+Usage: python run.py smoke | full
+- Data: 10x Genomics public Xenium FFPE Human Breast IDC (env var HMRF_XENIUM_DIR points at its outs directory)
+- Features: log1p(CP10K) -> z-score -> PCA30 (this method's pipeline; the 313-gene Xenium panel needs no HVG)
+- Spatial graph: cKDTree kNN (k=6). With a regular kNN structure the neighbor sum = q[nn].sum(1) (avoids the slow np.add.at path)
+- MF-VI: local fast implementation (same math as src/hmrf_solvers.em_mf_gaussian_graph, only the neighbor-sum vectorization differs)
+- Reference: 10x official graphclust (25 clusters) and kmeans_8 (reference clustering, not a biological gold standard)
 """
 import sys, os, time, json
 import numpy as np
@@ -25,7 +25,7 @@ from scipy.spatial import cKDTree
 ROOT = _ROOT
 XEN = _os.environ.get("HMRF_XENIUM_DIR", "")
 if not XEN or not _os.path.isdir(XEN):
-    raise SystemExit("环境变量 HMRF_XENIUM_DIR 未设置或无效：请指向 Xenium outs 目录（10x Genomics 公开数据，见 README）")
+    raise SystemExit("env var HMRF_XENIUM_DIR is unset or invalid: point it at the Xenium outs directory (10x Genomics public data, see README)")
 OUT = os.path.join(ROOT, "experiments/h10-xenium574k/results")
 os.makedirs(OUT, exist_ok=True)
 sys.path.insert(0, os.path.join(ROOT, "src"))
@@ -38,7 +38,7 @@ rng = np.random.default_rng(49)
 
 def em_mf_gaussian_knn(y2d, K, beta, nn_idx, max_iter=200, tol=1e-4, sigma_floor=0.2,
                        init_labels=None):
-    """kNN 版 VI-EM：返回 (q, mu, sigma, iters, elbo)。邻居和 = q[nn_idx].sum(1)。"""
+    """kNN version of VI-EM: returns (q, mu, sigma, iters, elbo). Neighbor sum = q[nn_idx].sum(1)."""
     n, d = y2d.shape
     lab = np.asarray(init_labels, dtype=np.int64).copy()
     mu = np.zeros((K, d))
@@ -51,7 +51,7 @@ def em_mf_gaussian_knn(y2d, K, beta, nn_idx, max_iter=200, tol=1e-4, sigma_floor
     sigma = 1.0
     it = 0
     for it in range(max_iter):
-        nbr = q[nn_idx].sum(1)                      # (n,K) 邻居和（快速路径）
+        nbr = q[nn_idx].sum(1)                      # (n,K) neighbor sums (fast path)
         logq = log_u + beta * nbr
         logq -= logq.max(1, keepdims=True)
         new = np.exp(logq); new /= new.sum(1, keepdims=True)
@@ -70,7 +70,7 @@ def em_mf_gaussian_knn(y2d, K, beta, nn_idx, max_iter=200, tol=1e-4, sigma_floor
 
 
 t0 = time.time()
-# ---------- 1. 数据加载 ----------
+# ---------- 1. Data loading ----------
 try:
     import scanpy as sc
     ad = sc.read_10x_h5(os.path.join(XEN, "cell_feature_matrix.h5"))
@@ -97,14 +97,14 @@ lab_k8 = np.full(len(cells), -1, dtype=np.int64)
 lab_k8[ref_k8["Barcode"].values - 1] = ref_k8["Cluster"].values
 print(f"cells {len(cells)} | graphclust {(lab_gc>=0).sum()} ({lab_gc.max()+1} cl) | kmeans8 {(lab_k8>=0).sum()}", flush=True)
 
-# ---------- 2. 子样（smoke） ----------
+# ---------- 2. Subsampling (smoke) ----------
 if MODE == "smoke":
     idx = np.sort(rng.choice(len(cells), SMOKE_N, replace=False))
     Xc = Xc[idx]; coords = coords[idx]; lab_gc = lab_gc[idx]; lab_k8 = lab_k8[idx]
     print(f"smoke subsample: {Xc.shape[0]}", flush=True)
 n = Xc.shape[0]
 
-# ---------- 3. 特征管线 ----------
+# ---------- 3. Feature pipeline ----------
 lib = np.asarray(Xc.sum(1)).ravel(); lib[lib == 0] = 1.0
 Xc = sp.diags((1e4 / lib).astype(np.float32)) @ Xc.tocsr().astype(np.float32)
 Y = np.log1p(Xc.toarray())
@@ -121,12 +121,12 @@ PC -= PC.mean(0, keepdims=True); PC /= (PC.std(0, keepdims=True) + 1e-9)
 del Y, G
 print(f"PCA30 {time.time()-t0:.1f}s", flush=True)
 
-# ---------- 4. kNN 图 ----------
+# ---------- 4. kNN graph ----------
 knn = 6
 tree = cKDTree(coords)
 dist, nn = tree.query(coords, k=knn + 1)
-nn_idx = nn[:, 1:]                                   # (n,k) 邻居索引（含潜在不对称→取对称并集）
-# 对称化：i↔j 互为邻居则各自持有对方；非对称对补全
+nn_idx = nn[:, 1:]                                   # (n,k) neighbor indices (may be asymmetric -> take the symmetric union)
+# Symmetrization: if i and j are mutual neighbors each keeps the other; asymmetric pairs are completed
 sym = sp.coo_matrix((np.ones(n * knn, dtype=np.int8),
                      (np.repeat(np.arange(n), knn), nn_idx.ravel())), shape=(n, n)).tocsr()
 sym = ((sym + sym.T) > 0).tocsr()
@@ -137,7 +137,7 @@ sym = sym.astype(np.float32).tocsr()
 def nbr_sum(q2d):
     return sym @ q2d
 
-# 替换 EM 的邻居和
+# Replace EM's neighbor sum
 def em_knn_fast(y2d, K, beta, max_iter=200, tol=1e-4, sigma_floor=0.2, init_labels=None):
     n_, d_ = y2d.shape
     lab = np.asarray(init_labels, dtype=np.int64).copy()
@@ -166,7 +166,7 @@ def em_knn_fast(y2d, K, beta, max_iter=200, tol=1e-4, sigma_floor=0.2, init_labe
     elbo = float((q * log_u).sum() + 0.5 * beta * (q * nbr).sum() - (q * np.log(q + 1e-300)).sum())
     return q, mu, sigma, it + 1, elbo
 
-# ---------- 5. kmeans++ 起点 ----------
+# ---------- 5. kmeans++ initialization ----------
 def kmeanspp_labels(PC, K, seed):
     r = np.random.default_rng(seed)
     n_ = PC.shape[0]
@@ -184,7 +184,7 @@ def kmeanspp_labels(PC, K, seed):
         out[s:s + 100000] = dd.argmin(1)
     return out
 
-# ---------- 6. MF-VI 运行 ----------
+# ---------- 6. MF-VI runs ----------
 rows = []
 BETAS = [1.0] if MODE == "smoke" else [0.7, 1.0, 1.5]
 RESTARTS = 1 if MODE == "smoke" else 3
@@ -203,7 +203,7 @@ for K, ref, refname in ((8, lab_k8, "kmeans8"), (20, lab_gc, "graphclust")):
                              iters=iters, t_s=round(dt, 1), sigma=round(float(sigma), 3)))
             print(rows[-1], flush=True)
 
-# ---------- 7. 汇总 ----------
+# ---------- 7. Summary ----------
 df = pd.DataFrame(rows)
 tag = MODE
 df.to_csv(os.path.join(OUT, f"h10_{tag}.csv"), index=False)

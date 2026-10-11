@@ -8,9 +8,9 @@ def _find_root(_start):
     raise RuntimeError("project root not found; run inside the repository")
 _ROOT = _os.environ.get("HMRF_ROOT") or _find_root(__file__)
 # ------------------------------------------------------
-"""H9: 12 切片 DLPFC 基准——本方法（VI-HMRF）全部切片运行。
-加载器与 h4d 特征管线逐行一致（VST-HVG3000 + z-score + PCA50 + kmeans++ 5 起点, beta 网格）。
-用法: python run_ours.py [slice_id | all | smoke]
+"""H9: 12-slice DLPFC benchmark -- run our method (VI-HMRF) on all slices.
+The loader and feature pipeline match h4d line for line (VST-HVG3000 + z-score + PCA50 + kmeans++ 5 starts, beta grid).
+Usage: python run_ours.py [slice_id | all | smoke]
 """
 import sys, os, time, csv, json, gzip
 sys.path.insert(0, _os.path.join(_ROOT, "src"))
@@ -86,7 +86,7 @@ def run_slice(sid, quick=False):
     t0 = time.perf_counter()
     X, rows, cols, truth = load_slice(sid)
     n = X.shape[0]
-    k = int(np.unique(truth).size)  # 按切片自适应类数（151669-672 仅 5 层）
+    k = int(np.unique(truth).size)  # adapt the class count per slice (151669-672 have only 5 layers)
     lx = np.log1p(X / (X.sum(1, keepdims=True) + 1e-9) * 1e4)
     del X
     m = lx.mean(0); v = lx.var(0); use = m > 1e-3
@@ -108,7 +108,7 @@ def run_slice(sid, quick=False):
     edges = np.array(edges, dtype=np.int64)
     t_pipe = time.perf_counter() - t0
 
-    # oracle 参照
+    # oracle reference
     mu_or = np.array([PC[truth == kk].mean(0) for kk in range(k)])
     log_u = gaussian_log_unaries(PC, mu_or, 0.8)
     best_o, best_o_lab, best_o_beta = 0.0, None, None
@@ -119,7 +119,7 @@ def run_slice(sid, quick=False):
         if a_o > best_o:
             best_o, best_o_lab, best_o_beta = a_o, lb_o.copy(), b
 
-    # VI-EM: beta 网格 x 5 起点
+    # VI-EM: beta grid x 5 starts
     runs = []
     betas = (0.7,) if quick else BETAS
     n_init = 1 if quick else N_INIT
@@ -140,7 +140,7 @@ def run_slice(sid, quick=False):
     aris = [r["ari"] for r in runs]
     eb = int(np.argmax([r["elbo"] for r in runs]))
     mx = int(np.argmax(aris))
-    best_lab = None  # 重取最优标签（保存用）
+    best_lab = None  # recompute the best labels (for saving)
     rng = np.random.default_rng(100 + runs[mx]["init"])
     init = kmeans_pp(PC, k, rng)
     q, mu, sig, iters, elbo = em_mf_gaussian_graph(PC, k, runs[mx]["beta"], edges, restarts=1,
@@ -179,7 +179,7 @@ def main():
             f.flush()
             sums.append(s)
             print(s, flush=True)
-    # summary 全量重写（支持续跑合并）
+    # rewrite the full summary (supports merging resumed runs)
     all_sums = {}
     if os.path.exists(f_sum):
         for r in csv.DictReader(open(f_sum)):

@@ -8,11 +8,11 @@ def _find_root(_start):
     raise RuntimeError("project root not found; run inside the repository")
 _ROOT = _os.environ.get("HMRF_ROOT") or _find_root(__file__)
 # ------------------------------------------------------
-"""H4d: DLPFC 151673 指标补全（NMI + 边界 F1）与标签留档（供图 4 出图）。
+"""H4d: DLPFC 151673 metric completion (NMI + boundary F1) and label archiving (for Figure 4).
 
-复跑 run_final.py 的最终配置（VST-HVG3000 + zscore + PCA50 + kmeans++ 5 起点，beta=0.7），
-补算 NMI/边界F1，并把 truth/各起点/标签存 npz（供论文图件）。
-用法: python run.py [smoke]
+Reruns the run_final.py final config (VST-HVG3000 + zscore + PCA50 + kmeans++ 5 starts, beta=0.7),
+adds NMI/boundary F1, and saves truth/each start/labels to npz (for the paper figures).
+Usage: python run.py [smoke]
 """
 import sys, os, time, csv, json
 sys.path.insert(0, _os.path.join(_ROOT, "src"))
@@ -113,7 +113,7 @@ def main():
                 if mm.any(): mu[kk] = Xm[mm].mean(0)
         return lb
 
-    # ---------- oracle 参照（含最优标签留档） ----------
+    # ---------- oracle reference (with best-label archiving) ----------
     mu_or = np.array([PC[truth == k].mean(0) for k in range(K)])
     log_u = gaussian_log_unaries(PC, mu_or, 0.8)
     best_o, best_o_lab, best_o_beta = 0.0, None, None
@@ -125,7 +125,7 @@ def main():
             best_o, best_o_lab, best_o_beta = a_o, lb_o.copy(), b
     print(f"ORACLE best ARI={best_o:.4f} @beta={best_o_beta}", flush=True)
 
-    # ---------- 5 起点 VI-EM @ beta=0.7 ----------
+    # ---------- 5-start VI-EM @ beta=0.7 ----------
     rows_out, labs = [], []
     for t in range(N_INIT):
         rng = np.random.default_rng(100 + t)

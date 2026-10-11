@@ -8,7 +8,7 @@ def _find_root(_start):
     raise RuntimeError("project root not found; run inside the repository")
 _ROOT = _os.environ.get("HMRF_ROOT") or _find_root(__file__)
 # ------------------------------------------------------
-"""图割构造穷举验证：把 alpha_step 的割结果与 2^9 暴力枚举对照。"""
+"""Graph-cut construction exhaustive check: compare the alpha_step cut result against 2^9 brute-force enumeration."""
 import sys, itertools
 sys.path.insert(0, _os.path.join(_ROOT, "src"))
 import numpy as np
@@ -22,7 +22,7 @@ def brute_E(b, unary, lab, H, W, beta, alpha):
     return potts_energy(new, unary, beta, H, W)
 
 fails = 0
-# 测试 1: 2x2 小网格（4 节点，16 种赋值），随机 labels/alpha/unary/beta
+# Test 1: 2x2 small grid (4 nodes, 16 assignments), random labels/alpha/unary/beta
 for trial in range(300):
     H, W, K = 2, 2, 4
     unary = rng.standard_normal((H, W, K))
@@ -40,9 +40,9 @@ for trial in range(300):
         fails += 1
         if fails <= 3:
             print("FAIL 2x2 trial", trial, "graph", gE, "brute", best_E, "lab", lab.ravel(), "alpha", alpha)
-print("2x2 穷举测试: ", "PASS" if fails == 0 else f"{fails} FAILS")
+print("2x2 exhaustive test: ", "PASS" if fails == 0 else f"{fails} FAILS")
 
-# 测试 2: 3x3 网格（512 种赋值）小样本
+# Test 2: 3x3 grid (512 assignments), small sample
 fails3 = 0
 for trial in range(30):
     H, W, K = 3, 3, 4
@@ -60,9 +60,9 @@ for trial in range(30):
         fails3 += 1
         if fails3 <= 3:
             print("FAIL 3x3 trial", trial, "graph", gE, "brute", best_E)
-print("3x3 穷举测试: ", "PASS" if fails3 == 0 else f"{fails3} FAILS")
+print("3x3 exhaustive test: ", "PASS" if fails3 == 0 else f"{fails3} FAILS")
 
-# 测试 3: 2x2 多标签全枚举：alpha_expansion 是否找到全局最优
+# Test 3: 2x2 multi-label full enumeration: does alpha_expansion find the global optimum
 ok3 = 0; tot = 0
 for trial in range(50):
     H, W, K = 2, 2, 3
@@ -76,5 +76,5 @@ for trial in range(50):
     tot += 1
     if abs(potts_energy(got, unary, beta, H, W) - best) < 1e-6:
         ok3 += 1
-print(f"2x2 多标签全局最优: {ok3}/{tot}（α-expansion 不保证全局最优，但能量必须单调下降）")
+print(f"2x2 multi-label global optimum: {ok3}/{tot} (alpha-expansion does not guarantee the global optimum, but the energy must decrease monotonically)")
 print("ALL TESTS DONE")

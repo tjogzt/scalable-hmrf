@@ -8,7 +8,7 @@ def _find_root(_start):
     raise RuntimeError("project root not found; run inside the repository")
 _ROOT = _os.environ.get("HMRF_ROOT") or _find_root(__file__)
 # ------------------------------------------------------
-"""H2b: 重设 NB 仿真参数（可辨识上限>0.9）后 VI-EM 对标 oracle 上限。"""
+"""H2b: reset NB simulation parameters (identifiable ceiling >0.9) then benchmark VI-EM against oracle ceiling."""
 import sys, time, csv
 sys.path.insert(0, _os.path.join(_ROOT, "src"))
 import numpy as np
@@ -23,13 +23,13 @@ for S in (250, 1000):
     y, mu_true = nb_emission_domains(truth, d=d, factors=FACTORS, disp=DISP, base_scale=1.0, seed=42)
     y2d = y.reshape(-1, d).astype(np.float64)
     frac0 = (y2d == 0).mean()
-    # oracle 上限：真 mu 一元项 + 纯 MF
+    # oracle ceiling: true mu unaries + pure MF
     log_u = nb_log_unaries(y2d, mu_true, DISP).reshape(S, S, K)
     t0 = time.perf_counter()
     qo, ito = mean_field_potts(log_u, BETA, max_iter=1000, tol=1e-3)
     t_o = time.perf_counter() - t0
     ari_o = adjusted_rand_index(truth, np.argmax(qo, axis=2))
-    # VI-EM（disp 固定为真值）
+    # VI-EM (disp fixed to the true value)
     t0 = time.perf_counter()
     q, mu, iters = em_mf_nb(y2d, K, BETA, S, S, disp=DISP, max_iter=300, tol=1e-3, seed=5)
     t_vi = time.perf_counter() - t0

@@ -8,7 +8,7 @@ def _find_root(_start):
     raise RuntimeError("project root not found; run inside the repository")
 _ROOT = _os.environ.get("HMRF_ROOT") or _find_root(__file__)
 # ------------------------------------------------------
-"""H3: alpha-expansion 图割 vs 均值场 VI（同实例、同 VI-EM 一元项）。"""
+"""H3: alpha-expansion graph cut vs mean-field VI (same instance, same VI-EM unaries)."""
 import sys, time, csv
 sys.path.insert(0, _os.path.join(_ROOT, "src"))
 import numpy as np
@@ -26,12 +26,12 @@ for S in (100, 250):
     q, mu_em, sigma_hat, iters, elbo = em_mf_gaussian(y2d, K, BETA, S, S, restarts=1, seed=3)
     t_em = time.perf_counter() - t0
     log_u = gaussian_log_unaries(y2d, mu_em, sigma_hat).reshape(S, S, K)
-    # 均值场（同 beta）
+    # mean field (same beta)
     t0 = time.perf_counter()
     qf, itf = mean_field_potts(log_u, BETA)
     t_mf = time.perf_counter() - t0
     mf_mode = np.argmax(qf, axis=2)
-    # 图割（代价 = -log_u）
+    # graph cut (cost = -log_u)
     cost = -log_u
     t0 = time.perf_counter()
     gc_mode = alpha_expansion(cost, BETA, max_sweeps=10, seed=7)

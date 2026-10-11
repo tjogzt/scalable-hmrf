@@ -8,7 +8,7 @@ def _find_root(_start):
     raise RuntimeError("project root not found; run inside the repository")
 _ROOT = _os.environ.get("HMRF_ROOT") or _find_root(__file__)
 # ------------------------------------------------------
-"""H2c: NB VI-EM 多起点 + beta 扫描，对标 oracle 上限。"""
+"""H2c: NB VI-EM multi-restart + beta sweep, benchmarked against the oracle ceiling."""
 import sys, time, csv
 sys.path.insert(0, _os.path.join(_ROOT, "src"))
 import numpy as np

@@ -1,7 +1,7 @@
-# H2 分析：规模曲线（kill test kt1 主体）
+# H2 Analysis: Scaling Curve (main body of kill test kt1)
 
-## 高斯发射规模曲线（VI-EM 联合估计，K=8, d=20, β=0.7；restarts：S<=750 用 2，1M 用 1）
-| S | n | ARI | 时间(s) | 迭代 | 峰值内存 |
+## Gaussian-emission scaling curve (joint VI-EM estimation, K=8, d=20, β=0.7; restarts: 2 for S<=750, 1 for 1M)
+| S | n | ARI | Time(s) | Iterations | Peak memory |
 |---|---|---|---|---|---|
 | 100 | 10K | 0.9942 | 0.06 | 12 | 57 MB |
 | 250 | 62.5K | 0.9933 | 0.22 | 16 | 136 MB |
@@ -9,26 +9,26 @@
 | 750 | 562.5K | 0.9937* | 39.8* | 13* | ~950 MB |
 | 1000 | 1M | 0.9934 | 10.78 | 14 | 1.7 GB |
 
-* S=750 为 restarts=2 复核值；单起点一次运行曾陷入局部最优（ARI 0.963）→ 记录为"初始化敏感性"，大网格需 >=2 起点或更好初始化。
+* S=750 states the restarts=2 re-check value; a single-start run once fell into a local optimum (ARI 0.963) → recorded as "initialization sensitivity"; large grids require >=2 starts or a better initialization.
 
-## 速度对照（Gibbs 外推，1500 sweeps；拟合 50/100 网格每扫时间 O(n)）
-| S | Gibbs 外推 | VI-EM 实际 | 提速 |
+## Speed comparison (Gibbs extrapolation, 1500 sweeps; per-sweep time O(n) fitted from the 50/100 grids)
+| S | Gibbs extrapolation | VI-EM actual | Speedup |
 |---|---|---|---|
 | 500 | 204 s | 1.41 s | **145x** |
 | 1000 | 817 s | 10.78 s | **76x** |
 
-注意：Gibbs 外推给的是 oracle 发射参数（免费）；VI-EM 还要同时估计参数，负担更重——公平比较下优势更大。
+Note: the Gibbs extrapolation provides oracle emission parameters (for free); VI-EM must also estimate the parameters simultaneously, a heavier burden — under a fair comparison its advantage is larger.
 
-## Kill test kt1 判定（高斯发射）
-✅ 同等 ARI（0.993-0.994 稳定，无精度崩塌）+ 量级提速（76-145x ≥ 10x）→ **通过（仿真层面）**。
+## Kill test kt1 decision (Gaussian emission)
+✅ Equal ARI (stable at 0.993-0.994, no accuracy collapse) + order-of-magnitude speedup (76-145x ≥ 10x) → **pass (at the simulation level)**.
 
-## NB 计数发射（初步，未达标）
-- S=500 / 1M：VI-EM ARI 仅 0.279 / 0.362。
-- 分诊：**任务可辨识上限 = 0.466**（真参数 + oracle MF）。原因：低表达域（均值 0.27/0.38/0.54，disp=1）几乎全零，彼此不可分。
-- 结论：不是 EM 的锅，是仿真设计太苛刻 → h2b 重设 NB 参数（均值下限 0.6+、域间对数间隔 ~0.6、d=20、disp=2），并始终与 oracle 上限对照。
-- 另记录：oracle-MF 在弱一元项下 500 迭代不收敛 → 收敛判据需按任务难度放宽（tol 1e-3）。
+## NB count emission (preliminary, below target)
+- S=500 / 1M: VI-EM ARI only 0.279 / 0.362.
+- Triage: **task identifiability ceiling = 0.466** (true parameters + oracle MF). Reason: low-expression domains (means 0.27/0.38/0.54, disp=1) are almost all zero and mutually indistinguishable.
+- Conclusion: not EM's fault — the simulation design was too severe → h2b resets the NB parameters (mean lower bound 0.6+, ~0.6 log spacing between domains, d=20, disp=2), and always compares against the oracle ceiling.
+- Also recorded: oracle-MF does not converge within 500 iterations under weak unary terms → the convergence criterion must be relaxed according to task difficulty (tol 1e-3).
 
-## 工程发现
-- 时间/迭代近似线性于 n（2.6ms→223ms/iter @ 10K→1M，超线性部分来自 numpy 大数组开销）。
-- 峰值内存 1.7GB@1M（float64 数据 + q/log_u/w）→ 优化到 float32 + 就地运算可 <1GB；块修复（h4）可进一步降。
-- 仿真器两处 bug 已修（rfft 频率轴、平滑后场归一化）——高保真仿真底座按综述建议建成。
+## Engineering findings
+- Time/iteration is approximately linear in n (2.6ms→223ms/iter @ 10K→1M, the superlinear part coming from numpy large-array overhead).
+- Peak memory 1.7GB@1M (float64 data + q/log_u/w) → optimizing to float32 + in-place operations can bring it below 1GB; block repair (h4) can lower it further.
+- Two simulator bugs fixed (rfft frequency axis, field normalization after smoothing) — a high-fidelity simulation base is now built as recommended by the review.

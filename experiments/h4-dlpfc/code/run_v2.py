@@ -8,7 +8,7 @@ def _find_root(_start):
     raise RuntimeError("project root not found; run inside the repository")
 _ROOT = _os.environ.get("HMRF_ROOT") or _find_root(__file__)
 # ------------------------------------------------------
-"""H4b: 特征管线 v2（VST-HVG 3000 + z-score + PCA 初始化）+ oracle 对照。"""
+"""H4b: feature pipeline v2 (VST-HVG 3000 + z-score + PCA init) + oracle comparison."""
 import sys, time, csv
 sys.path.insert(0, _os.path.join(_ROOT, "src"))
 import numpy as np
@@ -42,7 +42,7 @@ n = X.shape[0]
 lx = np.log1p(X / (X.sum(1, keepdims=True) + 1e-9) * 1e4)
 del X
 
-# VST 式 HVG（log10 均值-方差趋势 polyfit，残差取 top 3000）
+# VST-style HVG (log10 mean-variance trend polyfit, take top 3000 residuals)
 m = lx.mean(0); v = lx.var(0)
 use = m > 1e-3
 lm = np.log10(m[use]); lv = np.log10(np.maximum(v[use], 1e-12))
@@ -53,7 +53,7 @@ gidx = np.where(use)[0][order][:3000]
 Y = lx[:, gidx].astype(np.float64)
 Yz = (Y - Y.mean(0, keepdims=True)) / (Y.std(0, keepdims=True) + 1e-6)
 
-# PCA 初始化（20 维）
+# PCA init (20 dims)
 U, S, Vt = np.linalg.svd(Yz, full_matrices=False)
 PC = U[:, :20] * S[:20]
 rng = np.random.default_rng(7)
@@ -62,7 +62,7 @@ for _ in range(10):
     mu_pc = np.array([PC[init == k].mean(0) for k in range(K)])
     init = np.argmin(((PC[:, None, :] - mu_pc[None, :, :]) ** 2).sum(2), axis=1)
 
-# 邻接
+# adjacency
 pos2i = {(r, c): i for i, (r, c) in enumerate(zip(rows, cols))}
 edges = []
 for i, (r, c) in enumerate(zip(rows, cols)):
@@ -73,7 +73,7 @@ edges = np.array(edges, dtype=np.int64)
 print(f"n={n} edges={len(edges)}", flush=True)
 print(f"INIT(PCA-kmeans) ARI={adjusted_rand_index(truth, init):.4f}", flush=True)
 
-# oracle 上限（v2 特征）
+# oracle upper bound (v2 features)
 mu_or = np.array([Yz[truth == k].mean(0) for k in range(K)])
 log_u = gaussian_log_unaries(Yz, mu_or, 0.5)
 best_o = None

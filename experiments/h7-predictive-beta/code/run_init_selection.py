@@ -8,10 +8,10 @@ def _find_root(_start):
     raise RuntimeError("project root not found; run inside the repository")
 _ROOT = _os.environ.get("HMRF_ROOT") or _find_root(__file__)
 # ------------------------------------------------------
-"""H7b: 在固定 beta 下用留出似然选择"哪个起点解可信"——对比 ELBO 选择。
-h4d 已证：5 起点中 ELBO 选到最差解之一（ARI 0.1302 vs 最优 0.4557）。
-本探针：同 5 起点（rng 100+t）、beta=0.7、遮罩 5%、3 个遮罩；比较
-held-out LL / ELBO 与真实 ARI 的秩相关（Spearman）。
+"""H7b: at fixed beta, use the held-out likelihood to choose "which start solution is trustworthy" -- compared against ELBO selection.
+h4d already showed: among 5 starts, ELBO selected one of the worst solutions (ARI 0.1302 vs best 0.4557).
+This probe: same 5 starts (rng 100+t), beta=0.7, 5% mask, 3 masks; compares
+the rank correlation (Spearman) of held-out LL / ELBO with the true ARI.
 """
 import sys, os, csv, json
 ROOT = _ROOT

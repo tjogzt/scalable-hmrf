@@ -1,16 +1,16 @@
-# H2b 分析：NB 仿真重设参数
+# H2b Analysis: Re-designed NB Simulation Parameters
 
-## 设置变更
-- K=8, d=10→20, disp=1→3, 域因子 [0.8,1.1,1.5,2.0,2.7,3.7,5.0,6.8]（对数间隔 ~0.3），零比例 0.17-0.21。
+## Setting changes
+- K=8, d=10→20, disp=1→3, domain factors [0.8,1.1,1.5,2.0,2.7,3.7,5.0,6.8] (~0.3 log spacing), zero fraction 0.17-0.21.
 
-## 结果
-| S | n | 零比例 | ARI(oracle 上限) | ARI(VI-EM) | VI-EM 时间 |
+## Results
+| S | n | Zero fraction | ARI(oracle ceiling) | ARI(VI-EM) | VI-EM time |
 |---|---|---|---|---|---|
 | 250 | 62.5K | 0.214 | 0.857 | 0.661 | 6.8s |
 | 1000 | 1M | 0.168 | 0.878 | 0.757 | 94.6s |
 
-## 判断
-- 任务可辨识性从 0.466 → 0.86-0.88（大幅改善，但仍 <0.9 目标）。
-- VI-EM 与 oracle 的差距 0.12-0.20：来自初始化/收敛（300 迭代未收敛，弱一元项下 MF 收敛慢）。
-- 下一步（h2c）：log1p 标准化初始化 + 多起点 + tol 放宽 + beta 网格；目标 VI-EM/oracle 差距 <0.05。
-- 关键论点已成立：NB 场景的 ARI 天花板主要由数据信息量决定（oracle 0.86），与 kt2 的归因分解呼应。
+## Judgment
+- Task identifiability improved from 0.466 → 0.86-0.88 (a substantial improvement, but still <0.9 target).
+- The VI-EM vs oracle gap of 0.12-0.20 comes from initialization/convergence (not converged within 300 iterations; MF converges slowly under weak unary terms).
+- Next step (h2c): log1p-standardized initialization + multiple starts + relaxed tol + beta grid; target VI-EM/oracle gap <0.05.
+- The key argument already holds: the ARI ceiling of the NB scenario is mainly determined by the information content of the data (oracle 0.86), echoing the attribution decomposition of kt2.

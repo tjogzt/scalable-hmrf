@@ -8,7 +8,7 @@ def _find_root(_start):
     raise RuntimeError("project root not found; run inside the repository")
 _ROOT = _os.environ.get("HMRF_ROOT") or _find_root(__file__)
 # ------------------------------------------------------
-"""H4c: 50-PC 特征 + kmeans++ 多起点初始化 + VI-EM 于 PC 空间。"""
+"""H4c: 50-PC features + kmeans++ multi-start init + VI-EM in PC space."""
 import sys, time, csv
 sys.path.insert(0, _os.path.join(_ROOT, "src"))
 import numpy as np
@@ -83,7 +83,7 @@ rng = np.random.default_rng(7)
 init = kmeans_pp(PC, K, 25, rng)
 print(f"INIT kmeans++(50PC) ARI={adjusted_rand_index(truth, init):.4f}", flush=True)
 
-# oracle 上限（PC 特征）
+# oracle upper bound (PC features)
 mu_or = np.array([PC[truth == k].mean(0) for k in range(K)])
 log_u = gaussian_log_unaries(PC, mu_or, 0.8)
 best_o = None

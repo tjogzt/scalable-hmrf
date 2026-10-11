@@ -8,10 +8,10 @@ def _find_root(_start):
     raise RuntimeError("project root not found; run inside the repository")
 _ROOT = _os.environ.get("HMRF_ROOT") or _find_root(__file__)
 # ------------------------------------------------------
-"""批次1 收敛探针：区分"慢收敛"与"稳定次优盆地"。
-A) S=100 inst21（3 起点全撞 300 上限）: max_iter=3000 → 是否收敛、ARI；
-B) S=250 inst51 r0 / inst41 r2（撞上限）: max_iter=3000；
-C) S=750 inst11（0.9627 稳定盆地）：额外起点 seeds 6-11，看逃离盆地需要多少起点。
+"""Batch 1 convergence probe: distinguish "slow convergence" from "stable suboptimal basin".
+A) S=100 inst21 (all 3 restarts hit the 300 cap): max_iter=3000 -> does it converge, ARI;
+B) S=250 inst51 r0 / inst41 r2 (hit the cap): max_iter=3000;
+C) S=750 inst11 (0.9627 stable basin): extra restarts seeds 6-11, see how many restarts escaping the basin takes.
 """
 import sys, time
 sys.path.insert(0, _os.path.join(_ROOT, "src"))

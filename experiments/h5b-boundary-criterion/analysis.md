@@ -1,24 +1,24 @@
-# H5b 分析：β 选择准则（ELBO 否定 + 边界拐点）
+# H5b Analysis: β Selection Criterion (ELBO Rejected + Boundary Elbow)
 
-## 结果
-### NB 仿真 S=250（真最优 β=1.3, ARI 0.770）
+## Results
+### NB Simulation S=250 (true optimum β=1.3, ARI 0.770)
 | β | 0.3 | 0.5 | 0.7 | 1.0 | 1.3 | 1.7 |
 |---|---|---|---|---|---|---|
 | ARI | 0.397 | 0.491 | 0.667 | 0.740 | **0.770** | 0.708 |
-| 边界比 | 0.492 | 0.386 | 0.249 | 0.084 | 0.049 | 0.033 |
+| boundary ratio | 0.492 | 0.386 | 0.249 | 0.084 | 0.049 | 0.033 |
 
-ELBO 单调随 β 增（-4.706M→-4.585M）→ **ELBO 选择退化为"取最大 β"，作为准则被否定**。
-边界拐点（12% 容差）→ 1.7（网格截断所致；扩展网格将落在 1.5-1.7，ARI≈0.73-0.75，与最优差 ~0.04）。
+ELBO increases monotonically with β (−4.706M→−4.585M) → **ELBO selection degenerates to "take the largest β"; rejected as a criterion**.
+Boundary elbow (12% tolerance) → 1.7 (an artifact of grid truncation; an extended grid would place it in 1.5–1.7, ARI≈0.73–0.75, ~0.04 below optimal).
 
-### DLPFC（真最优 β=0.7, ARI 0.456）
+### DLPFC (true optimum β=0.7, ARI 0.456)
 | β | 0.3 | 0.5 | 0.7 | 1.0 |
 |---|---|---|---|---|
 | ARI | 0.397 | 0.440 | **0.456** | 0.451 |
-| 边界比 | 0.0292 | 0.0268 | 0.0254 | 0.0240 |
+| boundary ratio | 0.0292 | 0.0268 | 0.0254 | 0.0240 |
 
-边界拐点 → **0.5**（与最优 0.7 的 ARI 差仅 0.016）✓。
+Boundary elbow → **0.5** (ARI differs from the optimum 0.7 by only 0.016) ✓.
 
-## 结论（入论文）
-- ELBO 在此类模型上不是可行的模型选择准则（先验项随 β 单调，无惩罚平衡）——**负结果**。
-- 边界拐点（最小满足"边界比 ≤ (1+ε)·最小值"的 β）在真实数据上选择近最优 β，ΔARI ≤ 0.02；
-  在强先验任务族（NB 仿真）偏保守，需扩展网格。作为实用建议写入 Discussion。
+## Conclusion (for the paper)
+- ELBO is not a viable model-selection criterion for this class of models (the prior term increases monotonically with β, with no penalty balance)—**a negative result**.
+- The boundary elbow (the smallest β satisfying "boundary ratio ≤ (1+ε)·minimum") selects a near-optimal β on real data, ΔARI ≤ 0.02;
+  it is conservative on strong-prior task families (NB simulation) and requires a wider grid. To be written into the Discussion as a practical recommendation.

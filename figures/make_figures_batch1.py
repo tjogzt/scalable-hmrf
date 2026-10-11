@@ -8,9 +8,9 @@ def _find_root(_start):
     raise RuntimeError("project root not found; run inside the repository")
 _ROOT = _os.environ.get("HMRF_ROOT") or _find_root(__file__)
 # ------------------------------------------------------
-"""批次1 图件（第一版）：fig3 图割负结果 / fig5 beta 选择 / fig6 oracle 归因。
-数据全部来自 experiments/ 的 CSV；数字由脚本读取而非手写（个别基线常量注明出处）。
-输出: paper/figures/fig{3,5,6}_*.{pdf,png}
+"""Batch-1 figures (first version): fig3 graph-cut negative result / fig5 beta selection / fig6 oracle attribution.
+All data come from the experiments/ CSVs; numbers are read by the script rather than hard-coded (a few baseline constants note their source).
+Output: paper/figures/fig{3,5,6}_*.{pdf,png}
 """
 import os
 import numpy as np
@@ -31,7 +31,7 @@ plt.rcParams.update({
 ZHUSHA = "#C23531"; SHIQING = "#3D6BA8"; YANZHI = "#9D2933"; DIANQING = "#177CB0"; GREY = "#8A9299"
 PROJ = _ROOT
 FIG = next(p for p in (os.path.join(PROJ, "paper", "figures"), os.path.join(PROJ, "figures"))
-           if os.path.isdir(p))  # 兼容工作区与发布两种布局
+           if os.path.isdir(p))  # compatible with both the workspace and release layouts
 os.makedirs(FIG, exist_ok=True)
 
 
@@ -41,7 +41,7 @@ def save(fig, name):
     print("saved", name)
 
 
-# ---------------- fig3: graph cut vs mean field（负结果） ----------------
+# ---------------- fig3: graph cut vs mean field (negative result) ----------------
 h3b = pd.read_csv(os.path.join(PROJ, "experiments/h3b-stress/results/h3b_results.csv"))
 h3b = h3b.sort_values(["sigma", "muc", "beta"]).reset_index(drop=True)
 labels = [f"$\\sigma$={r.sigma:g}, $\\mu$={r.muc:g}, $\\beta$={r.beta:g}" for r in h3b.itertuples()]
@@ -73,7 +73,7 @@ h5b["beta_num"] = pd.to_numeric(h5b["beta"], errors="coerce")
 nb = h5b[(h5b.scene == "nb_sim") & h5b.beta_num.notna()]
 dl = h5b[(h5b.scene == "dlpfc") & h5b.beta_num.notna()]
 h4 = pd.read_csv(os.path.join(PROJ, "experiments/h4-dlpfc/results/h4_final.csv"))
-h4["elbo_rel"] = (h4.elbo_best - h4.elbo_best.min()) / 1e3   # 相对 beta=0.3，单位 10^3
+h4["elbo_rel"] = (h4.elbo_best - h4.elbo_best.min()) / 1e3   # relative to beta=0.3, units of 10^3
 
 fig, axes = plt.subplots(1, 3, figsize=(7.2, 2.6))
 ax = axes[0]
@@ -101,7 +101,7 @@ save(fig, "fig5_beta_selection"); plt.close(fig)
 # ---------------- fig6: oracle attribution ----------------
 meta = pd.read_json(os.path.join(PROJ, "experiments/h4-dlpfc/results/h4_final_meta.json"), typ="series")
 h4b = pd.read_csv(os.path.join(PROJ, "experiments/h4-dlpfc/results/h4b_results.csv"))
-# 管线消融的 oracle 上限: v1=0.308 / v2=0.666 来源 h4 analysis（诊断过程），v3=0.6215 来源 meta.json
+# Oracle ceilings of the pipeline ablation: v1=0.308 / v2=0.666 from the h4 analysis (diagnostic process), v3=0.6215 from meta.json
 v1_ceiling = 0.308; v2_ceiling = 0.666
 v3_ceiling = float(meta["oracle_best"])
 h2b = pd.read_csv(os.path.join(PROJ, "experiments/h2b-nb-redesign/results/h2b_results.csv"))

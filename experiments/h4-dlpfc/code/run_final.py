@@ -8,7 +8,7 @@ def _find_root(_start):
     raise RuntimeError("project root not found; run inside the repository")
 _ROOT = _os.environ.get("HMRF_ROOT") or _find_root(__file__)
 # ------------------------------------------------------
-"""H4 final: 5 起点 × beta 网格；按 ELBO 选优 + 报告 max/median ARI。"""
+"""H4 final: 5 starts x beta grid; select by ELBO + report max/median ARI."""
 import sys, time, csv, json
 sys.path.insert(0, _os.path.join(_ROOT, "src"))
 import numpy as np
@@ -76,7 +76,7 @@ def kmeans_pp(Xm, k, rng):
             if mm.any(): mu[kk] = Xm[mm].mean(0)
     return lab
 
-# oracle 上限
+# oracle upper bound
 mu_or = np.array([PC[truth == k].mean(0) for k in range(K)])
 log_u = gaussian_log_unaries(PC, mu_or, 0.8)
 best_o = 0.0

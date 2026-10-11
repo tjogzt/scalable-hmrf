@@ -8,7 +8,7 @@ def _find_root(_start):
     raise RuntimeError("project root not found; run inside the repository")
 _ROOT = _os.environ.get("HMRF_ROOT") or _find_root(__file__)
 # ------------------------------------------------------
-"""H5b: 边界拐点 beta 选择准则 vs ELBO（NB 仿真 + DLPFC 两场景）。"""
+"""H5b: boundary-elbow beta selection criterion vs ELBO (NB simulation + DLPFC scenarios)."""
 import sys, time, csv
 sys.path.insert(0, _os.path.join(_ROOT, "src"))
 import numpy as np
@@ -23,18 +23,18 @@ def boundary_ratio(labels, edges):
 
 def elbow_pick(betas, ratios, eps=0.12):
     rmin = min(ratios)
-    # 选满足 ratio <= (1+eps)*rmin 的最小 beta（偏好弱平滑）
+    # pick the smallest beta satisfying ratio <= (1+eps)*rmin (prefer weak smoothing)
     cand = [b for b, r in zip(betas, ratios) if r <= (1 + eps) * rmin]
     return cand[0]
 
 rows = []
-# ---- 场景 1：NB 仿真 S=250（真最优 beta≈1.3，ELBO 误选 0.3）----
+# ---- scenario 1: NB simulation S=250 (true optimum beta≈1.3, ELBO wrongly selects 0.3) ----
 S, K, d, DISP = 250, 8, 20, 3.0
 FACTORS = [0.8, 1.1, 1.5, 2.0, 2.7, 3.7, 5.0, 6.8]
 truth = gaussian_rf_domains(S, K, seed=41)
 y, mu_true = nb_emission_domains(truth, d=d, factors=FACTORS, disp=DISP, base_scale=1.0, seed=42)
 y2d = y.reshape(-1, d).astype(np.float64)
-# 网格边
+# grid edges
 edges_nb = []
 pos2i = {}
 k = 0
@@ -51,7 +51,7 @@ BETAS = (0.3, 0.5, 0.7, 1.0, 1.3, 1.7)
 res = []
 for b in BETAS:
     q, mu, iters, elbo = em_mf_nb_restarts(y2d, K, b, S, S, disp=DISP, max_iter=300, tol=1e-3, restarts=3, seed=5)
-    pred = np.argmax(q, axis=2).ravel()  # 网格版 q 为 (H,W,K)
+    pred = np.argmax(q, axis=2).ravel()  # grid q is (H,W,K)
     res.append(dict(beta=b, ari=adjusted_rand_index(truth, pred), elbo=elbo,
                     br=boundary_ratio(pred, edges_nb)))
     print("NB", res[-1], flush=True)
@@ -62,7 +62,7 @@ print(f"NB: best-ARI beta={[x['beta'] for x in res if x['ari']==best_ari][0]} (A
 rows += [dict(scene="nb_sim", **x) for x in res]
 rows.append(dict(scene="nb_sim", beta=f"ELBOW={elbow_b}", ari=None, elbo=None, br=None))
 
-# ---- 场景 2：DLPFC（真最优 beta≈0.7（best-of-5），ELBO 失效）----
+# ---- scenario 2: DLPFC (true optimum beta≈0.7 (best-of-5), ELBO fails) ----
 DATA = _os.path.join(_ROOT, "data/dlpfc")
 f = h5py.File(f"{DATA}/151673_raw_feature_bc_matrix.h5", "r")
 M = f["matrix"]

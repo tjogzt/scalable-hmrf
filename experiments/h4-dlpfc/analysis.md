@@ -1,29 +1,29 @@
-# H4 分析：DLPFC 151673 真实数据（kill test kt2 前哨）
+# H4 Analysis: DLPFC 151673 Real Data (Outpost for Kill Test kt2)
 
-## 数据
-151673 切片：3611 组织内 spot（剔除 28 个 NA 标签）、7 层真值（Layer_1..6 + WM）、
-六角点阵 21038 条邻边（Visium 同行 ±2 列 / 相邻行 ±1 列）。来源：dance/SpatialLIBD Dropbox 镜像。
+## Data
+151673 section: 3611 in-tissue spots (28 NA-labeled spots excluded), 7-layer ground truth (Layer_1..6 + WM),
+21038 adjacent edges on the hexagonal lattice (Visium same-row ±2 columns / adjacent-row ±1 column). Source: dance/SpatialLIBD Dropbox mirror.
 
-## 特征管线消融（诊断过程）
-| 管线 | oracle 上限 | VI-EM ARI | 说明 |
+## Feature Pipeline Ablation (Diagnostic Process)
+| Pipeline | oracle ceiling | VI-EM ARI | Notes |
 |---|---|---|---|
-| v1: dispersion-HVG 2000 + log1pCPM | 0.308 | 0.158 | 特征太弱 |
-| v2: VST-HVG 3000 + z-score | 0.666 | 0.19 | 天花板跃升，EM 陷坏不动点（σ̂ 漂移） |
-| v3: + PCA50 + kmeans++ 多起点 + σ cap | **0.622** | **0.456** | 最终配置 |
+| v1: dispersion-HVG 2000 + log1pCPM | 0.308 | 0.158 | features too weak |
+| v2: VST-HVG 3000 + z-score | 0.666 | 0.19 | ceiling jumps, EM trapped in a bad fixed point (σ̂ drift) |
+| v3: + PCA50 + kmeans++ multi-start + σ cap | **0.622** | **0.456** | final configuration |
 
-## 最终结果（5 起点 × β 网格）
-| β | ELBO 选优 ARI | 最大 ARI | 中位 ARI |
+## Final Results (5 starts × β grid)
+| β | ELBO-selected ARI | max ARI | median ARI |
 |---|---|---|---|
 | 0.3 | 0.316 | 0.397 | 0.320 |
 | 0.5 | 0.130 | 0.440 | 0.401 |
 | 0.7 | 0.130 | **0.456** | 0.250 |
 | 1.0 | 0.129 | 0.451 | 0.214 |
 
-- **最佳 ARI = 0.456**（≈73% 的 oracle 上限 0.622）；文献区间：SpaGCN≈0.44、BayesSpace/GraphST≈0.5-0.56 [数字待 Kang 补充材料核验]。
-- **ELBO 选优再次失败**（与 h5 一致）：ELBO 高者 ARI 低。→ β/模型选择需要新准则（边界拐点，h5b）。
-- 初始化敏感性是残余差距主因（median 与 max 差距大）：EM 在 PC 空间的多峰后验中不稳。
+- **Best ARI = 0.456** (≈73% of the oracle ceiling 0.622); literature range: SpaGCN≈0.44, BayesSpace/GraphST≈0.5-0.56 [numbers pending verification against Kang's supplementary material].
+- **ELBO selection fails again** (consistent with h5): higher ELBO goes with lower ARI. → β/model selection needs a new criterion (boundary elbow, h5b).
+- Initialization sensitivity is the main cause of the residual gap (large gap between median and max): EM is unstable in the multimodal posterior in PC space.
 
-## 结论（纳入论文）
-1. 纯概率管线（无深度网络）在真实数据达到第一梯队下沿，证明 HMRF 严谨性 + 规模可用性；
-2. 真实数据差距 = 初始化/模型规格（单 σ、各向同性）而非推断速度——与仿真负结果互为印证；
-3. oracle 归因方法论在真实数据同样有效（0.62 天花板解读基准分）。
+## Conclusion (for inclusion in the paper)
+1. The purely probabilistic pipeline (no deep network) reaches the lower edge of the first tier on real data, demonstrating HMRF rigor + scalability;
+2. The real-data gap = initialization/model specification (single σ, isotropic) rather than inference speed—mutually corroborating with the simulation negative result;
+3. The oracle attribution methodology is equally effective on real data (0.62 ceiling serves as a reference benchmark score).

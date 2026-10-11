@@ -8,12 +8,12 @@ def _find_root(_start):
     raise RuntimeError("project root not found; run inside the repository")
 _ROOT = _os.environ.get("HMRF_ROOT") or _find_root(__file__)
 # ------------------------------------------------------
-"""H7: 留出预测似然做 beta/模型选择（回应真实数据上 ELBO 失效）。
+"""H7: held-out predictive likelihood for beta/model selection (responding to ELBO failing on real data).
 
-设计：随机遮罩 5% spot；用其余 spot 拟合（遮罩 spot 无一元项，仅靠邻域场）；
-在遮罩 spot 上评估预测对数似然 ll_i = log Σ_k q_i(k) · N(y_i | mu_k, sigma²)；
-β* = argmax 平均留出 ll；与「真值 ARI 最优 β」「ELBO 最优 β」对比（ARI/ELBO 仅用于评估/对照）。
-用法: python run.py [smoke]
+Design: randomly mask 5% of spots; fit on the remaining spots (masked spots have no unary term, relying only on the neighborhood field);
+evaluate the predictive log-likelihood on the masked spots, ll_i = log Σ_k q_i(k) · N(y_i | mu_k, sigma²);
+β* = argmax of the mean held-out ll; compared against "the β optimal for ground-truth ARI" and "the ELBO-optimal β" (ARI/ELBO used only for evaluation/reference).
+Usage: python run.py [smoke]
 """
 import sys, os, time, csv, json
 ROOT = _ROOT
@@ -40,8 +40,8 @@ def _nbr_sum(q, edges):
 
 
 def masked_em_mf_gaussian(y, k, beta, edges, mask, max_iter=300, tol=1e-4, seed=0, n_init=2):
-    """遮罩感知的图版 MF-EM（高斯发射）。遮罩 spot 无一元项、不参与 M 步；
-    返回 (q, mu, sigma, iters, elbo_unmasked, heldout_ll_per_spot)。"""
+    """Mask-aware graph MF-EM (Gaussian emission). Masked spots have no unary term and are excluded from the M step;
+    returns (q, mu, sigma, iters, elbo_unmasked, heldout_ll_per_spot)."""
     n, d = y.shape
     best = None
     for r in range(n_init):
@@ -50,7 +50,7 @@ def masked_em_mf_gaussian(y, k, beta, edges, mask, max_iter=300, tol=1e-4, seed=
         sub = y[unm]
         lab_sub = kmeans_pp(sub, k, rng)
         lab = np.empty(n, dtype=np.int64)
-        # 遮罩 spot 用最近类均值初始化
+        # initialize masked spots with the nearest class mean
         mu0 = np.array([sub[lab_sub == kk].mean(0) if (lab_sub == kk).any() else sub[rng.integers(0, len(sub))]
                         for kk in range(k)])
         lab[unm] = lab_sub
@@ -82,14 +82,14 @@ def masked_em_mf_gaussian(y, k, beta, edges, mask, max_iter=300, tol=1e-4, seed=
             log_u[mask] = 0.0
             if dq < tol and it > 10:
                 break
-        # ELBO（未遮罩部分，标准 MF 公式）
+        # ELBO (unmasked part, standard MF formula)
         w = q.copy(); w[mask] = 0.0
         nbr = _nbr_sum(q, edges)
         e_logp = float((w * log_u).sum())
         e_prior = 0.5 * beta * float((q * nbr).sum())
         ent = float(-(q * np.log(q + 1e-300)).sum())
         elbo = e_logp + e_prior + ent
-        # 留出预测对数似然（遮罩 spot）
+        # held-out predictive log-likelihood (masked spots)
         ll = np.zeros(int(mask.sum()))
         s2 = sigma ** 2
         const = -0.5 * d * np.log(2 * np.pi * s2)
@@ -141,7 +141,7 @@ def feature_pipeline(X):
 
 
 def run_case(name, y, k, edges, truth=None):
-    """返回每个 beta 的汇总 + 三个准则的选择。"""
+    """Returns the per-beta summary plus the selection under the three criteria."""
     rows = []
     for beta in BETAS:
         lls, elbos, brs, aris = [], [], [], []
@@ -162,7 +162,7 @@ def run_case(name, y, k, edges, truth=None):
             rows.append(rec)
             lls.append(ll); elbos.append(elbo); brs.append(rec["boundary_ratio"])
         print(rec | {"ll_mean": round(float(np.mean(lls)), 2)}, flush=True)
-    # 汇总（跨 mask 平均）
+    # summary (averaged across masks)
     by = {}
     for beta in BETAS:
         sub = [r for r in rows if r["beta"] == beta]
@@ -186,7 +186,7 @@ def run_case(name, y, k, edges, truth=None):
 
 def main():
     all_rows, all_sums = [], []
-    # ---- DLPFC 切片 ----
+    # ---- DLPFC slices ----
     for sid in SLICES:
         X, rows_, cols_, truth = load_slice(sid)
         k = int(np.unique(truth).size)
@@ -195,7 +195,7 @@ def main():
         print(f"### {sid} n={len(truth)} k={k}", flush=True)
         r, s = run_case(f"dlpfc_{sid}", PC, k, edges, truth=truth)
         all_rows += r; all_sums.append(s)
-    # ---- 高斯仿真（真值已知的对照） ----
+    # ---- Gaussian simulation (control with known ground truth) ----
     sys.path.insert(0, _os.path.join(_ROOT, "src"))
     from simulate import gaussian_rf_domains, gaussian_emission
     S = 250

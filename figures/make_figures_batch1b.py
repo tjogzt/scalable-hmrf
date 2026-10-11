@@ -8,8 +8,8 @@ def _find_root(_start):
     raise RuntimeError("project root not found; run inside the repository")
 _ROOT = _os.environ.get("HMRF_ROOT") or _find_root(__file__)
 # ------------------------------------------------------
-"""批次1 图件（第二版）：fig2 规模曲线+实测Gibbs / fig4 DLPFC 空间域图。
-输出: paper/figures/fig2_scalability.{pdf,png}, fig4_dlpfc_maps.{pdf,png}
+"""Batch-1 figures (second version): fig2 scalability curve + measured Gibbs / fig4 DLPFC spatial-domain maps.
+Output: paper/figures/fig2_scalability.{pdf,png}, fig4_dlpfc_maps.{pdf,png}
 """
 import os
 import numpy as np
@@ -29,15 +29,15 @@ plt.rcParams.update({
 ZHUSHA = "#C23531"; SHIQING = "#3D6BA8"; YANZHI = "#9D2933"; DIANQING = "#177CB0"; GREY = "#8A9299"
 PROJ = _ROOT
 FIG = next(p for p in (os.path.join(PROJ, "paper", "figures"), os.path.join(PROJ, "figures"))
-           if os.path.isdir(p))  # 兼容工作区与发布两种布局
+           if os.path.isdir(p))  # compatible with both the workspace and release layouts
 
 long = pd.read_csv(f"{PROJ}/experiments/h2d-multiseed-metrics/results/h2d_results.csv")
 summ = pd.read_csv(f"{PROJ}/experiments/h2d-multiseed-metrics/results/h2d_summary.csv")
 anch = pd.read_csv(f"{PROJ}/experiments/h6-gibbs-measured/results/h6_anchors.csv")
 
 # ---------------- fig2 ----------------
-t1_med = long.groupby("S").t_s.median()          # 单次运行中位时间
-t3 = long.groupby(["S", "inst_seed"]).t_s.sum().groupby("S")  # 每实例 3 起点总时间
+t1_med = long.groupby("S").t_s.median()          # median time of a single run
+t3 = long.groupby(["S", "inst_seed"]).t_s.sum().groupby("S")  # total time of 3 restarts per instance
 t3_mean = t3.mean(); t3_sd = t3.std()
 
 fig, axes = plt.subplots(1, 3, figsize=(7.2, 2.5))

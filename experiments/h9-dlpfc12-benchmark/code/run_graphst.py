@@ -8,8 +8,8 @@ def _find_root(_start):
     raise RuntimeError("project root not found; run inside the repository")
 _ROOT = _os.environ.get("HMRF_ROOT") or _find_root(__file__)
 # ------------------------------------------------------
-"""H9: GraphST 基线（12 切片 DLPFC）。基于 GraphST 1.1.1 标准流程（对 151673 复现其教程设定）。
-用法: python run_graphst.py [slice_id | all | smoke]
+"""H9: GraphST baseline (12-slice DLPFC). Based on the GraphST 1.1.1 standard pipeline (reproducing its tutorial settings for 151673).
+Usage: python run_graphst.py [slice_id | all | smoke]
 """
 import sys, os, time, csv, gzip
 import numpy as np
@@ -21,8 +21,8 @@ os.environ.setdefault("CUDA_VISIBLE_DEVICES", "")
 
 
 def mclust_labels(X, n_clusters, model_names="EEE", seed=2020):
-    """Mclust(EEE) 聚类；经 Rscript 子进程调用（进程内 rpy2 嵌入会触发
-    R/numpy 双 OpenBLAS 死锁——dger_thread 挂起，已实测踩坑，勿改回 rpy2）。"""
+    """Mclust(EEE) clustering; called via an Rscript subprocess (in-process rpy2 embedding triggers
+    an R/numpy dual-OpenBLAS deadlock -- dger_thread hangs, verified firsthand, do not revert to rpy2)."""
     import tempfile, subprocess
     with tempfile.TemporaryDirectory() as td:
         xf = os.path.join(td, "X.csv"); of = os.path.join(td, "labels.csv")
@@ -48,7 +48,7 @@ ALL_SLICES = ["151507", "151508", "151509", "151510", "151669", "151670",
 
 
 def nmi(a, b):
-    # 真值标签可能是 'Layer3' 字符串：先因子化再编号（勿用 astype(int)）
+    # truth labels may be 'Layer3' strings: factorize then number them (do not use astype(int))
     a = np.unique(np.asarray(a), return_inverse=True)[1]
     b = np.unique(np.asarray(b), return_inverse=True)[1]
     ka = a.max() + 1; kb = b.max() + 1
@@ -86,8 +86,8 @@ def run_slice(sid):
     sc.pp.scale(adata, max_value=10)
     model = GraphST.GraphST(adata, device="cpu", epochs=600, random_seed=49)
     adata = model.train()
-    # GraphST 教程聚类设定：emb -> PCA(20) -> Mclust(EEE) -> refine_label(50)
-    # （GraphST.utils.clustering 内置 rpy2 弃用 API 在 rpy2>=3.6 崩溃，此处以现代 API 等价实现）
+    # GraphST tutorial clustering recipe: emb -> PCA(20) -> Mclust(EEE) -> refine_label(50)
+    # (GraphST.utils.clustering's built-in rpy2 deprecated API crashes on rpy2>=3.6, so this is an equivalent implementation using the modern API)
     from sklearn.decomposition import PCA
     from GraphST.utils import refine_label
     emb_pca = PCA(n_components=20, random_state=42).fit_transform(adata.obsm["emb"])
