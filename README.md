@@ -60,7 +60,7 @@ All scripts auto-detect the repository root (or honour `HMRF_ROOT`); no absolute
 | DLPFC 12-slice benchmark (h9) | `python experiments/h9-dlpfc12-benchmark/code/run_ours.py all` → baselines via `run_bayesspace.R all`, `run_scmeb.R all`, `run_graphst.py all` → `python experiments/h9-dlpfc12-benchmark/code/aggregate.py`; unified metrics + paired tests via `code/metrics_all_methods.py` |
 | Selection criteria (h7/h7b) | `python experiments/h7-predictive-beta/code/run.py`, `run_init_selection.py` |
 | Xenium 574K (h10) | `python experiments/h10-xenium574k/code/run.py full` (+ `save_best_labels.py`, `run_graphst_xenium.py full`) |
-| Figures | `python figures/make_fig1.py`, `make_fig7.py`, `make_fig8.py`, `make_figures_batch1*.py` |
+| Figures | `python figures/make_fig1.py`, `make_fig6.py`, `make_fig8.py`, `make_figures_batch1*.py` |
 
 ## Notes and honest caveats
 

@@ -8,7 +8,7 @@ def _find_root(_start):
     raise RuntimeError("project root not found; run inside the repository")
 _ROOT = _os.environ.get("HMRF_ROOT") or _find_root(__file__)
 # ------------------------------------------------------
-"""Batch-1 figures (first version): fig3 graph-cut negative result / fig5 beta selection / fig6 oracle attribution.
+"""Batch-1 figures (first version): fig3 graph-cut negative result / fig7 beta selection / fig5 oracle attribution.
 All data come from the experiments/ CSVs; numbers are read by the script rather than hard-coded (a few baseline constants note their source).
 Output: paper/figures/fig{3,5,6}_*.{pdf,png}
 """
@@ -96,7 +96,7 @@ ax.set_xlabel("$\\beta$"); ax.set_ylabel("$\\Delta$ELBO ($\\times 10^3$)")
 ax.set_title("(c) ELBO is monotone in $\\beta$")
 ax.legend(frameon=False, loc="upper left")
 fig.tight_layout()
-save(fig, "fig5_beta_selection"); plt.close(fig)
+save(fig, "fig7_beta_selection"); plt.close(fig)
 
 # ---------------- fig6: oracle attribution ----------------
 meta = pd.read_json(os.path.join(PROJ, "experiments/h4-dlpfc/results/h4_final_meta.json"), typ="series")
@@ -122,7 +122,7 @@ ax.set_title("(a) DLPFC 151673")
 ax.annotate(f"{vals[1]/vals[0]*100:.0f}% of oracle", xy=(1, vals[1] + 0.05), ha="center", fontsize=7.5, color=ZHUSHA)
 
 ax = axes[1]
-nb_oracle = float(h2b.loc[h2b.S == 1000, "ari_oracle"].iloc[0])          # 0.878 @1M fix-beta=0.7
+nb_oracle = float(h2c.loc[(h2c.S == 500) & (h2c.beta == 0.7), "ari_oracle"].iloc[0])   # 0.868 @250K fixed beta=0.7
 vi_tuned = float(h2c.loc[(h2c.S == 500) & (h2c.beta == 1.0), "ari_viem"].iloc[0])   # 0.890
 vi_at_oracle_beta = float(h2c.loc[(h2c.S == 500) & (h2c.beta == 0.7), "ari_viem"].iloc[0])  # 0.713
 vals = [nb_oracle, vi_at_oracle_beta, vi_tuned]
@@ -133,7 +133,7 @@ for i, v in enumerate(vals):
     ax.text(i, v + 0.012, f"{v:.3f}", ha="center", fontsize=8)
 ax.set_xticks(range(3)); ax.set_xticklabels(names, fontsize=7.5)
 ax.set_ylim(0, 1.0); ax.set_ylabel("ARI")
-ax.set_title("(b) NB simulation (500K/1M)")
+ax.set_title("(b) NB simulation (250K)")
 
 ax = axes[2]
 vals = [v1_ceiling, v2_ceiling, v3_ceiling]
@@ -146,5 +146,5 @@ ax.set_xticks(range(3)); ax.set_xticklabels(names, fontsize=7, rotation=30, ha="
 ax.set_ylim(0, 0.80); ax.set_ylabel("Oracle-reference ARI")
 ax.set_title("(c) Feature pipeline ceiling")
 fig.tight_layout()
-save(fig, "fig6_oracle_attribution"); plt.close(fig)
+save(fig, "fig5_oracle_attribution"); plt.close(fig)
 print("FIGURES DONE")

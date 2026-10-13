@@ -1,6 +1,6 @@
 # H9 DLPFC 12-Section Four-Method Benchmark — Analysis
 
-Date: 2026-10-11 (Batch 2) | Figures/tables: `paper/figures/fig7_dlpfc12_benchmark.{pdf,png}`, `results/h9_benchmark_{slices,summary}.csv`
+Date: 2026-10-11 (Batch 2) | Figures/tables: `paper/figures/fig6_dlpfc12_benchmark.{pdf,png}`, `results/h9_benchmark_{slices,summary}.csv`
 
 ## Setup
 - 12 DLPFC sections (8 with 7 layers, k=7: 151507-10, 151673-76; 4 with 5 layers, k=5: 151669-72),
@@ -72,7 +72,7 @@ Date: 2026-10-11 (Batch 2) | Figures/tables: `paper/figures/fig7_dlpfc12_benchma
 ## Reproduction checklist
 - Ours: `code/run_ours.py all` (all sections within 15 min); feature export `code/export_features.py`
 - BayesSpace: `code/run_bayesspace.R all`; SC.MEB: `code/run_scmeb.R all` (official configuration C); GraphST: `code/run_graphst.py all`
-- Aggregation: `code/aggregate.py` → `results/h9_benchmark_{slices,summary}.csv`; figure: `paper/figures/make_fig7.py`
+- Aggregation: `code/aggregate.py` → `results/h9_benchmark_{slices,summary}.csv`; figure: `paper/figures/make_fig6.py`
 - Environment pitfalls and fixes are recorded in the skill `hmrf-spatial-benchmark` (rpy2 dual-BLAS deadlock, SC.MEB OpenMP/parallel bug, etc.)
 
 
