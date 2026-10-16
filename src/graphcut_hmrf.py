@@ -85,3 +85,82 @@ def alpha_expansion(unary, beta, max_sweeps=10, seed=0):
         if potts_energy(lab, unary, beta, H, W) >= E_before - 1e-9:
             break
     return lab
+
+
+# ---------------------------------------------------------------------------
+# General-graph variants (arbitrary adjacency: kNN graphs, non-grid topologies).
+# Same Kolmogorov--Zabih construction; nodes 0..n-1, undirected edges (e0, e1).
+# ---------------------------------------------------------------------------
+
+def potts_energy_graph(labels, unary, beta, e0, e1):
+    lab = np.asarray(labels)
+    E = float(unary[np.arange(lab.size), lab].sum())
+    diff = int((lab[e0] != lab[e1]).sum())
+    return E + beta * diff
+
+
+def alpha_step_graph(unary, lab, e0, e1, beta, alpha):
+    """One binary alpha-expansion step on a general graph; energy-monotone."""
+    n = lab.size
+    g = maxflow.Graph[float]()
+    g.add_nodes(n + len(e0))  # at most one auxiliary node per undirected edge
+    flat_u = unary.astype(float)
+    d0 = flat_u[np.arange(n), lab]
+    d1 = flat_u[np.arange(n), alpha]
+    for i in range(n):
+        mn = min(d0[i], d1[i])
+        g.add_tedge(i, d0[i] - mn, d1[i] - mn)
+    aux_id = n
+    for t in range(len(e0)):
+        i = int(e0[t]); j = int(e1[t])
+        a = int(lab[i]); b = int(lab[j])
+        if a == b:
+            if alpha != a:
+                g.add_edge(i, j, beta, beta)
+        else:
+            s1 = 1.0 if a != alpha else 0.0
+            s2 = 1.0 if alpha != b else 0.0
+            P = beta * (s1 + s2 - 1.0)
+            u_i = beta * (s2 - 1.0)
+            u_j = beta * (s1 - 1.0)
+            if u_i >= 0:
+                g.add_tedge(i, 0.0, u_i)
+            else:
+                g.add_tedge(i, -u_i, 0.0)
+            if u_j >= 0:
+                g.add_tedge(j, 0.0, u_j)
+            else:
+                g.add_tedge(j, -u_j, 0.0)
+            if P > 0:
+                e = aux_id; aux_id += 1
+                g.add_tedge(e, P, 0.0)
+                g.add_edge(e, i, P, 0.0)
+                g.add_edge(e, j, P, 0.0)
+    g.maxflow()
+    seg = np.array([g.get_segment(i) for i in range(n)])
+    new = lab.copy()
+    new[seg == 0] = alpha
+    if potts_energy_graph(new, unary, beta, e0, e1) < potts_energy_graph(lab, unary, beta, e0, e1):
+        return new
+    return lab.astype(np.int64)
+
+
+def alpha_expansion_graph(unary, beta, edges, max_sweeps=10, seed=0):
+    """unary: (n, K) cost; edges: (m, 2) int pairs.
+
+    Edge convention: unique undirected pairs (each pair counted once in the Potts
+    energy). Directed/doubled input is normalised internally. Returns labels (n,).
+    """
+    edges = np.asarray(edges, dtype=np.int64)
+    edges = np.unique(np.sort(edges[:, :2], axis=1), axis=0)
+    e0 = edges[:, 0].astype(np.int64); e1 = edges[:, 1].astype(np.int64)
+    n, K = unary.shape
+    rng = np.random.default_rng(seed)
+    lab = np.argmax(unary, axis=1).astype(np.int64)
+    for _ in range(max_sweeps):
+        E0 = potts_energy_graph(lab, unary, beta, e0, e1)
+        for alpha in rng.permutation(K):
+            lab = alpha_step_graph(unary, lab, e0, e1, beta, int(alpha))
+        if potts_energy_graph(lab, unary, beta, e0, e1) >= E0 - 1e-9:
+            break
+    return lab

@@ -59,16 +59,24 @@ All scripts auto-detect the repository root (or honour `HMRF_ROOT`); no absolute
 | Graph-cut negative (h3b) | `python experiments/h3b-stress/code/run.py` |
 | DLPFC 12-slice benchmark (h9) | `python experiments/h9-dlpfc12-benchmark/code/run_ours.py all` → baselines via `run_bayesspace.R all`, `run_scmeb.R all`, `run_graphst.py all` → `python experiments/h9-dlpfc12-benchmark/code/aggregate.py`; unified metrics + paired tests via `code/metrics_all_methods.py` |
 | Selection criteria (h7/h7b) | `python experiments/h7-predictive-beta/code/run.py`, `run_init_selection.py` |
-| Xenium 574K (h10) | `python experiments/h10-xenium574k/code/run.py full` (+ `save_best_labels.py`, `run_graphst_xenium.py full`) |
+| Xenium 574K (h10) | `python experiments/h10-xenium574k/code/run.py full` (+ `save_best_labels.py`, `run_graphst_xenium.py full`; marker validation via `code/marker_check.py`; sparse-patch equivalence via `code/e8_driver.sh`) |
+| Matched restart budgets (BayesSpace/SC-MEB 5 seeds) | `Rscript experiments/h9-dlpfc12-benchmark/code/run_bayesspace_multi.R`, `run_scmeb_multi.R` → `python experiments/h9-dlpfc12-benchmark/code/run_matched_budget.py` → `analyze_matched_budget.py` |
+| Reference robustness / donor LMM / K sensitivity | `code/ref_robustness.py`, `code/donor_lmm.py`, `code/k_sensitivity.py` |
+| NB ceiling grid (h2e) | `python experiments/h2e-nb-ceiling-grid/code/run.py` |
+| kNN topology check (h3c) | `python experiments/h3c-knn-topology/code/run.py` |
+| Timing protocol (iterations/per-iteration) | `python experiments/h2d-multiseed-metrics/code/timing_analysis.py` |
+| Stress dispersion (5 seeds) | `python experiments/h3b-stress/code/run_seeds.py` |
 | Figures | `python figures/make_fig1.py`, `make_fig6.py`, `make_fig8.py`, `make_figures_batch1*.py` |
 
 ## Notes and honest caveats
 
 - On real data, the 10x-provided clusterings are used as **reference partitions, not biological
-  ground truth**; the "oracle reference" in the DLPFC benchmark is a *pipeline-conditioned*
-  reference (truth-initialised k-means++ + HMRF smoothing), not an absolute ceiling.
-- Baseline-vs-ours protocol is deliberately asymmetric and stated as such: baselines run once
-  under official defaults; ours reports best/median/ELBO-selected protocols side by side.
+  ground truth**; the "pipeline-conditioned reference" in the DLPFC benchmark is class-mean
+  unaries from the truth labels + pure mean-field, maximised over the beta grid, and is itself
+  construction-sensitive (0.21-0.63 across initialisation variants on 151673).
+- Baseline-vs-ours is reported under two protocols: official single runs for baselines and the
+  full multi-start protocol for ours, plus a matched-restart-budget control (equal restart counts;
+  Table: `results/matched_budget/matched_budget_summary.csv`).
 - Held-out likelihood is a weak (non-catastrophic) restart selector; ELBO-based selection is an
   anti-pattern on real data.
 

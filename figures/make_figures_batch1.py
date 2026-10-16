@@ -42,27 +42,31 @@ def save(fig, name):
 
 
 # ---------------- fig3: graph cut vs mean field (negative result) ----------------
-h3b = pd.read_csv(os.path.join(PROJ, "experiments/h3b-stress/results/h3b_results.csv"))
-h3b = h3b.sort_values(["sigma", "muc", "beta"]).reset_index(drop=True)
-labels = [f"$\\sigma$={r.sigma:g}, $\\mu$={r.muc:g}, $\\beta$={r.beta:g}" for r in h3b.itertuples()]
-dE = (h3b.e_mf - h3b.e_gc) / h3b.e_mf * 100.0   # >0: graph cut attains lower energy
-dA = h3b.ari_gc - h3b.ari_mf                     # sign-inconsistent
+h3b = pd.read_csv(os.path.join(PROJ, "experiments/h3b-stress/results/h3b_seeds_results.csv"))
+h3b["dE_pct"] = (h3b.e_mf - h3b.e_gc) / h3b.e_mf * 100.0   # >0: graph cut attains lower energy
+g = h3b.groupby(["sigma", "muc", "beta"]).agg(
+    dE=("dE_pct", "mean"), dE_sd=("dE_pct", "std"),
+    dA=("d_ari", "mean"), dA_sd=("d_ari", "std")).reset_index()
+labels = [f"$\\sigma$={r.sigma:g}, $\\mu$={r.muc:g}, $\\beta$={r.beta:g}" for r in g.itertuples()]
+dE = g.dE.values; dA = g.dA.values
+print("fig3 dE range:", dE.min(), dE.max(), "| dA(mean) range:", dA.min(), dA.max())
 
 fig, axes = plt.subplots(1, 2, figsize=(7.0, 2.7), sharey=True)
-x = np.arange(len(h3b))
-axes[0].bar(x, dE, color=ZHUSHA, width=0.62)
+x = np.arange(len(g))
+axes[0].bar(x, dE, yerr=g.dE_sd.values, color=ZHUSHA, width=0.62, error_kw=dict(lw=0.8, capsize=2))
 axes[0].axhline(0, color="k", lw=0.7)
 axes[0].set_title("(a) Energy advantage of graph cut")
 axes[0].set_ylabel("$\\Delta$Energy$(\\mathrm{MF}-\\mathrm{GC})/E_{\\mathrm{MF}}$  (%)")
-axes[1].bar(x, dA, color=[SHIQING if v >= 0 else YANZHI for v in dA], width=0.62)
+axes[1].bar(x, dA, yerr=g.dA_sd.values, color=[SHIQING if v >= 0 else YANZHI for v in dA], width=0.62,
+            error_kw=dict(lw=0.8, capsize=2))
 axes[1].axhline(0, color="k", lw=0.7)
-axes[1].set_title("(b) Label accuracy difference")
+axes[1].set_title("(b) Label accuracy (5 seeds, mean $\\pm$ sd)")
 axes[1].set_ylabel("$\\Delta$ARI (GC $-$ MF)")
 for ax in axes:
     ax.set_xticks(x); ax.set_xticklabels(labels, rotation=32, ha="right", fontsize=7)
 maxE = dE.max(); maxA = np.abs(dA).max()
-axes[0].annotate(f"always positive\n(max {maxE:.3f}%)", xy=(1.2, maxE * 0.94), fontsize=7.5, color=ZHUSHA)
-axes[1].annotate(f"sign inconsistent\n(|$\\Delta$ARI| $\\leq$ {np.abs(dA).max():.4f})", xy=(0.6, maxA * 0.94),
+axes[0].annotate(f"always lower energy\n(max {maxE:.3f}%)", xy=(1.2, maxE * 0.94), fontsize=7.5, color=ZHUSHA)
+axes[1].annotate(f"sign inconsistent\n(mean |$\\Delta$ARI| $\\leq$ {np.abs(dA).max():.3f})", xy=(0.6, maxA * 1.35),
                  fontsize=7.5, color=GREY)
 fig.tight_layout()
 save(fig, "fig3_graphcut_negative"); plt.close(fig)

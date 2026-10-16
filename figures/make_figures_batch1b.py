@@ -38,7 +38,7 @@ anch = pd.read_csv(f"{PROJ}/experiments/h6-gibbs-measured/results/h6_anchors.csv
 # ---------------- fig2 ----------------
 t1_med = long.groupby("S").t_s.median()          # median time of a single run
 t3 = long.groupby(["S", "inst_seed"]).t_s.sum().groupby("S")  # total time of 3 restarts per instance
-t3_mean = t3.mean(); t3_sd = t3.std()
+t3_mean = t3.mean(); t3_sd = t3.std(); t3_med = t3.median()
 
 fig, axes = plt.subplots(1, 3, figsize=(7.2, 2.5))
 ax = axes[0]
@@ -57,7 +57,7 @@ ax.annotate("slow-converging\ninstances", xy=(6.9e4, 0.951), xytext=(6.0e5, 0.90
 
 ax = axes[1]
 ax.plot(summ.n, t1_med.values, "-o", ms=4, lw=1.2, color=SHIQING, label="VI-EM, single run (median)")
-ax.plot(summ.n, t3_mean.values, "-^", ms=4, lw=1.2, color=DIANQING, label="VI-EM, 3 restarts (mean)")
+ax.plot(summ.n, t3_med.values, "-^", ms=4, lw=1.2, color=DIANQING, label="VI-EM, 3 restarts (median)")
 ax.plot(anch.n, anch.total_s, "-D", ms=4.5, lw=1.2, color=ZHUSHA, label="Gibbs, 1500 sweeps (measured)")
 ax.plot([2.5e5, 1e6], [204, 817], ":", color=GREY, lw=1.0, label="Gibbs (old extrapolation)")
 ax.set_xscale("log"); ax.set_yscale("log")
@@ -69,11 +69,11 @@ ax = axes[2]
 gib = anch.set_index("S").total_s
 scales = [500, 750, 1000]
 sp_single = [gib[S] / t1_med[S] for S in scales]
-sp_robust = [gib[S] / t3_mean[S] for S in scales]
+sp_robust = [gib[S] / t3_med[S] for S in scales]
 ax.plot(scales, sp_single, "-o", ms=4, lw=1.2, color=SHIQING, label="vs single run")
 ax.plot(scales, sp_robust, "-^", ms=4, lw=1.2, color=DIANQING, label="vs 3-restart policy")
 ax.axhline(10, color=ZHUSHA, ls="--", lw=0.9)
-ax.text(510, 10.8, "kt1 gate: 10$\\times$", fontsize=7, color=ZHUSHA)
+ax.text(510, 10.8, "gate: 10$\\times$", fontsize=7, color=ZHUSHA)
 ax.plot([500, 1000], [145, 76], "s", ms=4, mfc="none", mec=GREY, label="old claim")
 ax.set_yscale("log"); ax.set_xticks(scales)
 ax.set_xlabel("spots $n$"); ax.set_ylabel("speedup vs Gibbs")

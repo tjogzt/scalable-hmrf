@@ -1,0 +1,7 @@
+{
+ "same_graph_indices": true,
+ "same_graph_data": true,
+ "labels_ari_sparse_vs_dense": 1.0,
+ "labels_agreement": 1.0,
+ "n": 10000
+}
