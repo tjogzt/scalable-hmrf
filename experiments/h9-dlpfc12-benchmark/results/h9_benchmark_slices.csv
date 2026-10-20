@@ -1,0 +1,73 @@
+slice,method,k,ari,nmi,bf1,t_s,note
+151507,Ours(best),,0.3508,0.54,0.1435,9.7,best of 5 inits x 5 betas
+151507,Ours(median),,0.2083,,,9.7,median over 25 runs
+151507,Oracle,,0.6498,,,,"kmeans++ on truth, beta=1.0"
+151508,Ours(best),,0.3539,0.5831,0.0946,9.4,best of 5 inits x 5 betas
+151508,Ours(median),,0.3004,,,9.4,median over 25 runs
+151508,Oracle,,0.5148,,,,"kmeans++ on truth, beta=1.0"
+151509,Ours(best),,0.5498,0.6116,0.2094,12.600000000000001,best of 5 inits x 5 betas
+151509,Ours(median),,0.396,,,12.600000000000001,median over 25 runs
+151509,Oracle,,0.6271,,,,"kmeans++ on truth, beta=0.7"
+151510,Ours(best),,0.3661,0.542,0.1074,9.7,best of 5 inits x 5 betas
+151510,Ours(median),,0.315,,,9.7,median over 25 runs
+151510,Oracle,,0.6221,,,,"kmeans++ on truth, beta=1.0"
+151669,Ours(best),,0.4806,0.4767,0.073,7.8,best of 5 inits x 5 betas
+151669,Ours(median),,0.3628,,,7.8,median over 25 runs
+151669,Oracle,,0.7181,,,,"kmeans++ on truth, beta=1.0"
+151670,Ours(best),,0.6562,0.5808,0.0807,8.2,best of 5 inits x 5 betas
+151670,Ours(median),,0.3578,,,8.2,median over 25 runs
+151670,Oracle,,0.6824,,,,"kmeans++ on truth, beta=1.0"
+151671,Ours(best),,0.5709,0.6182,0.1765,7.7,best of 5 inits x 5 betas
+151671,Ours(median),,0.4809,,,7.7,median over 25 runs
+151671,Oracle,,0.7217,,,,"kmeans++ on truth, beta=1.0"
+151672,Ours(best),,0.6487,0.6871,0.0962,6.9,best of 5 inits x 5 betas
+151672,Ours(median),,0.4968,,,6.9,median over 25 runs
+151672,Oracle,,0.7019,,,,"kmeans++ on truth, beta=1.0"
+151673,Ours(best),,0.4284,0.6098,0.0924,7.8,best of 5 inits x 5 betas
+151673,Ours(median),,0.1949,,,7.8,median over 25 runs
+151673,Oracle,,0.6191,,,,"kmeans++ on truth, beta=1.0"
+151674,Ours(best),,0.3885,0.501,0.1331,9.6,best of 5 inits x 5 betas
+151674,Ours(median),,0.2833,,,9.6,median over 25 runs
+151674,Oracle,,0.6024,,,,"kmeans++ on truth, beta=1.0"
+151675,Ours(best),,0.3435,0.5104,0.1163,8.4,best of 5 inits x 5 betas
+151675,Ours(median),,0.1768,,,8.4,median over 25 runs
+151675,Oracle,,0.6399,,,,"kmeans++ on truth, beta=1.0"
+151676,Ours(best),,0.424,0.5674,0.102,10.1,best of 5 inits x 5 betas
+151676,Ours(median),,0.2794,,,10.1,median over 25 runs
+151676,Oracle,,0.6633,,,,"kmeans++ on truth, beta=1.0"
+151507,BayesSpace,7,0.4653,0.65,,86.3,
+151508,BayesSpace,7,0.4345,0.5814,,80.9,
+151509,BayesSpace,7,0.3433,0.5777,,89.2,
+151510,BayesSpace,7,0.4665,0.6193,,110.6,
+151669,BayesSpace,5,0.2608,0.4946,,118.9,
+151670,BayesSpace,5,0.3989,0.5366,,102.6,
+151671,BayesSpace,5,0.5065,0.6311,,118.7,
+151672,BayesSpace,5,0.7119,0.6975,,109.4,
+151673,BayesSpace,7,0.5482,0.689,,84.7,
+151674,BayesSpace,7,0.2889,0.4779,,82.1,
+151675,BayesSpace,7,0.3657,0.6051,,74.2,
+151676,BayesSpace,7,0.3544,0.5398,,66.4,
+151507,SC.MEB,7,0.425,0.5311,,75.6,
+151508,SC.MEB,7,0.4387,0.5502,,70.0,
+151509,SC.MEB,7,0.4147,0.5136,,82.1,
+151510,SC.MEB,7,0.4237,0.5432,,80.7,
+151669,SC.MEB,5,0.4108,0.498,,73.1,
+151670,SC.MEB,5,0.4055,0.5211,,67.8,
+151671,SC.MEB,5,0.3555,0.4941,,90.3,
+151672,SC.MEB,5,0.3669,0.4691,,78.1,
+151673,SC.MEB,7,0.3291,0.4788,,80.0,
+151674,SC.MEB,7,0.3967,0.4939,,84.7,
+151675,SC.MEB,7,0.426,0.5121,,69.3,
+151676,SC.MEB,7,0.3614,0.4927,,66.3,
+151507,GraphST,7,0.3201,0.4787,,103.3,
+151508,GraphST,7,0.385,0.5024,,120.5,
+151509,GraphST,7,0.4636,0.5835,,141.6,
+151510,GraphST,7,0.3077,0.5024,,121.0,
+151669,GraphST,5,0.2522,0.4328,,77.5,
+151670,GraphST,5,0.4298,0.4889,,69.5,
+151671,GraphST,5,0.3075,0.5268,,88.6,
+151672,GraphST,5,0.2968,0.4589,,74.0,
+151673,GraphST,7,0.3418,0.5068,,69.9,
+151674,GraphST,7,0.2392,0.4124,,73.4,
+151675,GraphST,7,0.1585,0.3244,,69.4,
+151676,GraphST,7,0.203,0.4059,,66.0,

@@ -1,0 +1,12 @@
+{
+ "oracle_best_ari": 0.6215,
+ "oracle_best_beta": 1.0,
+ "oracle_nmi": 0.7185,
+ "oracle_bf1": 0.1846,
+ "ari_max": 0.4557,
+ "ari_median": 0.2503,
+ "ari_elbo_selected": 0.1302,
+ "elbo_selected_init": 4,
+ "n": 3611,
+ "n_edges": 21038
+}

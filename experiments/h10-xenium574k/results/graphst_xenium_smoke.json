@@ -1,0 +1,10 @@
+{
+ "mode": "smoke",
+ "n": 50000,
+ "K": 8,
+ "ari_raw_kmeans8": 0.3569,
+ "ari_ref_kmeans8": 0.2241,
+ "ari_raw_graphclust": 0.1617,
+ "ari_ref_graphclust": 0.0801,
+ "t_total": 693.2
+}

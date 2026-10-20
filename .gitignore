@@ -1,0 +1,35 @@
+# ---- 公开原始数据（可由公开源重建；见 data_manifest.md）----
+/data/
+
+# ---- 第三方论文 PDF（版权原因不随仓库分发）----
+/literature/
+
+# ---- LaTeX 构建产物 ----
+*.aux
+*.log
+*.out
+*.blg
+*.bbl
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.xdv
+*.toc
+
+# ---- 修订备份（历史已由 git 承载）----
+*.bak_*
+*.pdf.pre_r10
+*.tex.pre_r10
+
+# ---- 系统 / 编辑器 / Python / R ----
+.DS_Store
+Thumbs.db
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+.env
+.Rhistory
+.RData
+.Rproj.user/
+Rplots.pdf

@@ -1,0 +1,47 @@
+# Scalable-HMRF 研究状态（综述方向二）
+project: scalable-hmrf
+title: 面向百万级空间转录组的可扩展变分/图割 HMRF 空间域识别
+created: 2026-10-02
+working_dir: "."   # 项目根（脚本自动探测；勿硬编码用户路径）
+source_review: 隐马尔可夫随机场（HMRF）在空间转录组肿瘤微环境研究中的进展、价值与未来方向 (1).pdf
+
+research_question: >
+  能否以多类图割（alpha-expansion）与均值场变分推断替代 Gibbs MCMC，
+  让 HMRF 空间域识别在百万级细胞/spot 数据上保持或提升 ARI 的同时实现量级提速？
+  即：把 HMRF 的统计严谨性带入 Slide-seqV2 / Xenium / MERFISH / Stereo-seq 的"规模-精度双洼地"。
+
+kill_tests:
+  kt1: 10万→百万子采样序列上，同等/更好 ARI 下实现量级（>=10x）提速
+  kt2: Slide-seqV2 真实数据上 ARI 显著超过已报基准 0.058-0.153
+  kt3: 精度闸门——若仅提速而 ARI 崩塌（低于 BayesSpace 同尺度水平），方向不成立
+
+hypotheses:
+  h1:
+    text: 均值场变分近似 Potts HMRF（高斯发射）在小网格上与 Gibbs 全贝叶斯后验模态一致（ARI 差 < 0.02）
+    status: passed
+    purpose: 正确性闸门——证明 VI 代理忠实
+  h2:
+    text: NB/ZINB 计数发射 + 均值场变分在 10万-百万级模拟数据上保持 ARI（与 Gibbs 小样本一致）且 >100x 提速
+    status: passed_gauss
+    purpose: 规模闸门（kill test kt1）
+  h3:
+    text: alpha-expansion 多类图割（EM 一元项 + Potts 势）多类域 ARI 达到或超过 BayesSpace 水平，近线性扩展
+    status: pending
+    purpose: 图割路径（kill test kt1 并行方案）
+  h4:
+    text: 分块-修复（block-repair）策略消除大规模 VI 的块边界伪影（风险：块边界伪影）
+    status: pending
+    purpose: 工程稳健性
+
+constraints:
+  compute: Apple Silicon Mac, 16 cores, 无 GPU, 纯 CPU numpy
+  time_budget: 单实验 < 10 分钟；小模型先验验证优先
+  data: 先高保真仿真（可控方向/边界/稀疏度），后真实数据（DLPFC Visium, Slide-seqV2 子采样）
+
+baselines:
+  - BayesSpace (MCMC, 事实标准)
+  - SC-MEB (经验贝叶斯 ICM-EM)
+  - scGCO (图割, 逐基因)
+  - Giotto-HMRF (ICM)
+metrics: [ARI, NMI, boundary-F1, wall-time, peak-memory]
+next_action: 已完成——论文初稿 paper/main.pdf，见 README.md

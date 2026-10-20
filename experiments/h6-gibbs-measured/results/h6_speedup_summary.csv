@@ -1,0 +1,4 @@
+S,n,gibbs_measured_s,vi_t3_mean_s,vi_t3_median_s,vi_t1_median_s,vi_t1_mean_s,speedup_t3mean,speedup_t3median,speedup_t1median,n_capped,n_runs
+500,250000,138.66,2.12,2.11,0.69,0.71,65.3,65.7,201.0,0,15
+750,562500,360.99,22.49,8.99,2.34,7.5,16.1,40.2,154.3,2,15
+1000,1000000,674.21,13.74,13.2,3.98,4.58,49.1,51.1,169.4,0,15
