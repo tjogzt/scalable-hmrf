@@ -46,8 +46,8 @@ from hmrf.solvers import em_mf_gaussian_graph, mean_field_graph, gaussian_log_un
 
 DATA = str(data_dir() / "dlpfc")
 K, N_PC = 7, 50
-BETAS = (0.3, 0.5, 0.7, 1.0)
-N_INIT = 5
+BETAS = tuple(CFG["experiments"]["h4"]["betas"])
+N_INIT = CFG["experiments"]["h4"]["n_init"]
 
 f = h5py.File(f"{DATA}/151673_raw_feature_bc_matrix.h5", "r")
 M = f["matrix"]

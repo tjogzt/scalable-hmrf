@@ -75,7 +75,7 @@ for i in range(S):
             t = pos2i.get((i+di, j+dj))
             if t is not None: edges_nb.append((pos2i[(i,j)], t))
 edges_nb = np.array(edges_nb, dtype=np.int64)
-BETAS = (0.3, 0.5, 0.7, 1.0, 1.3, 1.7)
+BETAS = tuple(CFG["experiments"]["h5b"]["betas"])
 res = []
 for b in BETAS:
     q, mu, iters, elbo = em_mf_nb_restarts(y2d, K, b, S, S, disp=DISP, max_iter=300, tol=1e-3, restarts=3, seed=5)

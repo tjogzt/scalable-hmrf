@@ -45,7 +45,7 @@ import h5py
 from hmrf.solvers import em_mf_gaussian_graph, mean_field_graph, gaussian_log_unaries, adjusted_rand_index
 
 DATA = str(data_dir() / "dlpfc")
-K = 7
+K = CFG["datasets"]["dlpfc12"]["n_clusters"]
 # load (same as run.py)
 f = h5py.File(f"{DATA}/151673_raw_feature_bc_matrix.h5", "r")
 M = f["matrix"]

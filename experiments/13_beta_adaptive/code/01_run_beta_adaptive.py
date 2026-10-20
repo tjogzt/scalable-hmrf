@@ -44,7 +44,7 @@ from hmrf.simulate import gaussian_rf_domains, gaussian_emission, nb_emission_do
 from hmrf.solvers import em_mf_gaussian, em_mf_nb_restarts, adjusted_rand_index
 
 S, K, d = 250, 8, 20
-GRID = (0.3, 0.5, 0.7, 1.0, 1.3, 1.7)
+GRID = tuple(CFG["experiments"]["h5"]["beta_grid"])
 rows = []
 # Gaussian scenario
 truth = gaussian_rf_domains(S, K, seed=11)

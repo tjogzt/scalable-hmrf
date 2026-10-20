@@ -53,7 +53,9 @@ from hmrf.graphcut import alpha_expansion, potts_energy
 SEEDS = tuple(CFG["experiments"]["h3b"]["seeds"])
 SETTINGS = CFG["experiments"]["h3b"]["settings"]
 BETAS = tuple(CFG["experiments"]["h3b"]["betas"])
-S, K, d = 100, 8, 20
+S = CFG["experiments"]["h3b"]["sim"]["grid"]
+K = CFG["experiments"]["h3b"]["sim"]["k"]
+d = CFG["experiments"]["h3b"]["sim"]["dim"]
 
 rows = []
 for sigma, muc in SETTINGS:

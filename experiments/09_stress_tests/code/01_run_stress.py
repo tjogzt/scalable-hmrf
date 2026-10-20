@@ -44,7 +44,9 @@ from hmrf.simulate import gaussian_rf_domains, gaussian_emission
 from hmrf.solvers import em_mf_gaussian, mean_field_potts, gaussian_log_unaries, adjusted_rand_index
 from hmrf.graphcut import alpha_expansion, potts_energy
 
-S, K, d = 100, 8, 20
+S = CFG["experiments"]["h3b"]["sim"]["grid"]
+K = CFG["experiments"]["h3b"]["sim"]["k"]
+d = CFG["experiments"]["h3b"]["sim"]["dim"]
 rows = []
 for sigma, muc in ((0.7, 1.3), (1.0, 1.3), (0.7, 2.0)):
     for beta in (1.5, 2.5):

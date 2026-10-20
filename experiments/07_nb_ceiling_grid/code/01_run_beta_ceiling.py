@@ -48,22 +48,22 @@ from hmrf.simulate import gaussian_rf_domains, nb_emission_domains
 from hmrf.solvers import adjusted_rand_index, mean_field_potts, nb_log_unaries
 
 OLD_FACTORS = CFG["experiments"]["h2e"]["old_factors"]
+K_CLASSES = CFG["experiments"]["h2e"]["n_classes"]
 NEW_FACTORS = CFG["experiments"]["h2e"]["new_factors"]
 GRID = CFG["experiments"]["h2e"]["beta_grid"]
 
 rows = []
-for tag, factors, disp, S, d in (
-    ("old_h2", OLD_FACTORS, 1.0, 250, 10),
-    ("old_h2", OLD_FACTORS, 1.0, 500, 10),
-    ("new_h2b", NEW_FACTORS, 3.0, 250, 20),
-    ("new_h2b", NEW_FACTORS, 3.0, 500, 20),
-    ("new_h2b", NEW_FACTORS, 3.0, 1000, 20),
-):
-    truth = gaussian_rf_domains(S, 8, seed=41)
-    y, mu_true = nb_emission_domains(truth, d=d, factors=factors, disp=disp, base_scale=1.0, seed=42)
+for case in CFG["experiments"]["h2e"]["cases"]:
+    tag = case["tag"]
+    factors = OLD_FACTORS if tag == "old_h2" else NEW_FACTORS
+    disp, S, d = case["disp"], case["grid"], case["dim"]
+    truth = gaussian_rf_domains(S, K_CLASSES, seed=CFG["experiments"]["h2e"]["seeds"]["truth"])
+    y, mu_true = nb_emission_domains(
+        truth, d=d, factors=factors, disp=disp, base_scale=1.0,
+        seed=CFG["experiments"]["h2e"]["seeds"]["emission"])
     y2d = y.reshape(-1, d).astype(np.float64)
     frac0 = float((y2d == 0).mean())
-    log_u = nb_log_unaries(y2d, mu_true, disp).reshape(S, S, 8)
+    log_u = nb_log_unaries(y2d, mu_true, disp).reshape(S, S, K_CLASSES)
     for b in GRID:
         t0 = time.perf_counter()
         q, it = mean_field_potts(log_u, b, max_iter=1000, tol=1e-3)
