@@ -1,86 +1,118 @@
-# Scalable HMRF
+# Scalable-HMRF
 
-**Mean-field variational hidden Markov random field (HMRF) for spatial domain identification at
-single-cell / million-spot scale.**
+Scalable mean-field variational inference for hidden Markov random fields (HMRFs) on spatial
+transcriptomics, with exact inference (graph cuts, blocked Gibbs) as audited references.
 
-Code, results and figure sources for the manuscript
-*"Mean-Field Variational HMRF for Million-Spot Spatial Domain Identification: Exact Inference Is
-Not the Bottleneck"*.
+Code, results and figure sources for the manuscript *"Mean-Field Variational HMRF for
+Million-Spot Spatial Domain Identification: Exact Inference Is Not the Bottleneck"*.
 
-## Headline results (all reproducible from this repository)
+## Headline results
 
-| Claim | Evidence | Where |
-|---|---|---|
-| Mean-field VI-EM scales without accuracy loss | ARI ≥ 0.993 from 62.5K to 1M simulated spots, 5 instance seeds × 3 restarts; **154–201× measured speedup** vs a Gibbs baseline granted oracle parameters (16–65× under a robust 3-restart policy) | `experiments/h2d-multiseed-metrics`, `h6-gibbs-measured` |
-| Exact inference is not the bottleneck | α-expansion graph cuts always lower the energy but never raise ARI (Δ ≤ 0.006, sign inconsistent) | `experiments/h3-graphcut`, `h3b-stress` |
-| Competitive accuracy on real data at ~10× lower cost | 12 DLPFC slices: best-of-restart **0.463** mean ARI vs BayesSpace 0.429 / SC-MEB 0.396 / GraphST 0.309; 8.9 s vs 76–88 s per slice. Paired Wilcoxon (n=12): **vs GraphST p=0.0015** (11/12 slices), vs BayesSpace/SC-MEB not significant (p=0.62/0.18) — competitiveness, not dominance; unified NMI / boundary-F1 reported alongside ARI | `experiments/h9-dlpfc12-benchmark` |
-| Single-cell-resolution scale | Xenium breast IDC, **574,852 cells**: full pipeline ~10 s preparation + 26–72 s per fit; ARI 0.488 vs the 10x k-means-8 reference; **head-to-head with GraphST: 0.488 in ~80 s vs 0.283 in 68 min** | `experiments/h10-xenium574k` |
-| Selection, not capacity, is the binding constraint | ELBO, held-out predictive likelihood (5 sections × 3 masks) and boundary-elbow criteria all fail as automatic selectors; restart spread reproduced on real data at every scale | `experiments/h7-predictive-beta`, `h4d-dlpfc-metrics` |
+| Claim | Evidence |
+|---|---|
+| Mean-field VI-EM scales without accuracy loss | ARI ≥ 0.99 from 62.5K to 1M simulated spots (5 instance seeds × restarts); 154–201× measured speed-up vs a Gibbs baseline given oracle parameters (16–65× under a robust 3-restart policy) |
+| Exact inference is not the bottleneck | α-expansion graph cuts always lower the Potts energy but never raise ARI (Δ ≤ 0.006, sign inconsistent across settings) |
+| Competitive accuracy on real data at ~10× lower cost | 12 DLPFC sections: best-of-restart **0.463** mean ARI vs BayesSpace 0.429 / SC-MEB 0.396 / GraphST 0.309; 8.9 s vs 76–88 s per section. Paired Wilcoxon (n=12): vs GraphST p=0.0015 (11/12), vs BayesSpace/SC-MEB not significant (p=0.62/0.18) — competitiveness, not dominance. Under a matched restart budget (best-of-5 seeds), BayesSpace reaches 0.478 > ours 0.427 ≈ SC-MEB 0.441 (p=0.68); reported transparently in the manuscript |
+| Single-cell-resolution scale | Xenium breast IDC, **574,852 cells**: ~10 s preparation + 26–72 s per fit; ARI 0.488 vs the 10x k-means-8 reference; head-to-head vs GraphST 0.488 in ~80 s vs 0.283 in 68 min |
+| Selection, not capacity, is the binding constraint | ELBO, held-out predictive likelihood (5 sections × 3 masks) and boundary-elbow criteria all fail as automatic selectors; restart spread is reproduced at every scale |
 
 ## Repository layout
 
 ```
-src/                     core method (numpy only)
-  hmrf_solvers.py        MF-VI / VI-EM (grid & graph), Gibbs reference
-  graphcut_hmrf.py       alpha-expansion graph-cut solver (PyMaxflow)
-  simulate.py            simulation base (smoothed Gaussian fields, Gaussian/NB emissions)
-experiments/<name>/      one directory per experiment: code/ + results/ + analysis.md
-figures/                 manuscript figures (PDF + PNG) and the scripts that generate them
+config/
+  defaults.yaml            all datasets, seeds, grids and palettes (single source of truth)
+  slices_dlpfc12.txt       section list shared with the R baselines
+src/hmrf/
+  config.py                YAML loader (env overrides, no constants in analysis code)
+  paths.py                 repository/data/results/figure path resolution
+  solvers.py               MF-VI, VI-EM (Gaussian / NB), blocked Gibbs, ARI
+  graphcut.py              α-expansion graph cuts (grid and arbitrary graph)
+  simulate.py              Potts / Gaussian / NB synthetic generators
+experiments/
+  01_vi_vs_gibbs/          VI vs Gibbs reference (synthetic)
+  02_vi_em/                variational EM sanity checks
+  03_scaling/              runtime scaling
+  04_nb_redesign/          NB regime redesign
+  05_nb_convergence/       NB convergence
+  06_multiseed_metrics/    multi-seed unified metrics + timing
+  07_nb_ceiling_grid/      informativeness ceiling over β for both NB parameterizations
+  08_graphcut/             graph-cut benchmark + construction unit tests
+  09_stress_tests/         stress regimes + seed sweep
+  10_knn_topology/         irregular kNN topologies
+  11_dlpfc_single/         single-section DLPFC pipeline
+  12_dlpfc_metrics/        unified metrics on one section
+  13_beta_adaptive/        adaptive β rules
+  14_boundary_criterion/   boundary-based selection criteria
+  15_gibbs_timing/         measured Gibbs cost
+  16_predictive_beta/      held-out predictive β, initialization comparison
+  17_dlpfc12_benchmark/    12-section benchmark vs BayesSpace / SC-MEB / GraphST
+  18_xenium_574k/          574K-cell Xenium application, GraphST head-to-head, patch tests
+figures/                   01–05 scripts + output/ (final PDF/PNG)
+docs/                      workflow, data manifest, revision log
 ```
 
-## Data
+Every experiment directory contains `code/` (numbered entry points), `results/` (CSV/JSON/NPZ
+outputs quoted in the manuscript) and, where applicable, `analysis.md` / `protocol.md`.
 
-Raw data are **not** included; both datasets are public.
+## Requirements
 
-- **DLPFC 12 slices** (Maynard et al. 2021): obtained via `spatialLIBD`. The 12-slice export used
-  by this work is regenerated with `experiments/h9-dlpfc12-benchmark/code/export_sce.R`.
-  Set `HMRF_DLPFC_CACHE` to a `dlpfc_sce_cache.rds` created with
-  `spatialLIBD::fetch_data("sce")` (see the script header).
-- **Xenium human breast IDC** (10x Genomics public release, panel `xenium_human_breast_gene_expression_panel`):
-  download the `outs` bundle from 10x Genomics and point `HMRF_XENIUM_DIR` at it.
+* Python ≥ 3.10 with `numpy`, `scipy`, `pandas`, `matplotlib`, `PyYAML`, `PyMaxflow`.
+* R ≥ 4.2 with `BayesSpace`, `SC.MEB`, `SingleCellExperiment`, `SpatialExperiment`, `Matrix`
+  (only for the baseline scripts in experiments 17 and the SCE export).
+* `GraphST` (optional) for the Xenium baseline; point `HMRF_GRAPHST_DIR` at its install directory.
+* Raw data: see `docs/data_manifest.md`. `data/` is not versioned.
 
-All scripts auto-detect the repository root (or honour `HMRF_ROOT`); no absolute user paths.
+```bash
+python -m pip install -r requirements.txt
+export HMRF_XENIUM_DIR=/path/to/Xenium_V1_FFPE_Human_Breast_IDC_outs
+export HMRF_GRAPHST_DIR=/path/to/site-packages/GraphST   # optional
+```
 
-## Environment
+## Quick start
 
-- Python 3.12: `numpy`, `scipy`, `pandas`, `matplotlib`, `scikit-learn`, `anndata`, `scanpy`, `torch`.
-- R 4.5: `BayesSpace`, `SC.MEB` (GitHub `feiyoung/SC-MEB`), `mclust`, `scater`/`scran`/`scuttle`.
-- GraphST 1.1.1 (pip) — **requires the sparse-storage patch** in
-  `experiments/h10-xenium574k/code/patch_graphst_sparse.py` to run at single-cell scale; the
-  official implementation allocates dense n×n graphs (≈2.6 TB at 574K cells). The patch keeps
-  edge semantics identical; re-run the script after any GraphST reinstall.
+All entry points discover the repository root from `config/defaults.yaml`, so they run from any
+working directory:
 
-## Reproducing the paper
+```bash
+python experiments/07_nb_ceiling_grid/code/01_run_beta_ceiling.py
+python experiments/17_dlpfc12_benchmark/code/01_run_ours.py all
+python figures/04_make_fig6.py
+```
 
-| Experiment | Command (from repo root) |
+`HMRF_ROOT` overrides the root, `HMRF_SEED` overrides the project seed (49), `HMRF_CONFIG`
+points to an alternative YAML file.
+
+## Reproducing the manuscript
+
+| Manuscript element | Command |
 |---|---|
-| Scale curve (h2d) | `python experiments/h2d-multiseed-metrics/code/run.py` |
-| Measured Gibbs (h6) | `python experiments/h6-gibbs-measured/code/run.py` |
-| Graph-cut negative (h3b) | `python experiments/h3b-stress/code/run.py` |
-| DLPFC 12-slice benchmark (h9) | `python experiments/h9-dlpfc12-benchmark/code/run_ours.py all` → baselines via `run_bayesspace.R all`, `run_scmeb.R all`, `run_graphst.py all` → `python experiments/h9-dlpfc12-benchmark/code/aggregate.py`; unified metrics + paired tests via `code/metrics_all_methods.py` |
-| Selection criteria (h7/h7b) | `python experiments/h7-predictive-beta/code/run.py`, `run_init_selection.py` |
-| Xenium 574K (h10) | `python experiments/h10-xenium574k/code/run.py full` (+ `save_best_labels.py`, `run_graphst_xenium.py full`; marker validation via `code/marker_check.py`; sparse-patch equivalence via `code/e8_driver.sh`) |
-| Matched restart budgets (BayesSpace/SC-MEB 5 seeds) | `Rscript experiments/h9-dlpfc12-benchmark/code/run_bayesspace_multi.R`, `run_scmeb_multi.R` → `python experiments/h9-dlpfc12-benchmark/code/run_matched_budget.py` → `analyze_matched_budget.py` |
-| Reference robustness / donor LMM / K sensitivity | `code/ref_robustness.py`, `code/donor_lmm.py`, `code/k_sensitivity.py` |
-| NB ceiling grid (h2e) | `python experiments/h2e-nb-ceiling-grid/code/run.py` |
-| kNN topology check (h3c) | `python experiments/h3c-knn-topology/code/run.py` |
-| Timing protocol (iterations/per-iteration) | `python experiments/h2d-multiseed-metrics/code/timing_analysis.py` |
-| Stress dispersion (5 seeds) | `python experiments/h3b-stress/code/run_seeds.py` |
-| Figures | `python figures/make_fig1.py`, `make_fig6.py`, `make_fig8.py`, `make_figures_batch1*.py` |
+| Fig. 1 (method overview) | `python figures/01_make_fig1.py` |
+| Figs. 2–5 (benchmark, runtime, graph-cut, stress) | `python figures/02_make_figs_2_5.py` |
+| Figs. 6–7 (predictive β, Gibbs cost) | `python figures/03_make_figs_6_7.py` |
+| Fig. 8 (Xenium) | `python figures/05_make_fig8.py` |
+| 12-section benchmark table | `01_run_ours.py all` → `02_run_graphst.py all` → R baselines → `08_compute_metrics.py` → `09_aggregate_metrics.py` |
+| Matched-budget control | `07_run_matched_budget.py all` → `10_analyze_matched_budget.py` |
+| Xenium 574K result | `01_run_xenium.py full` (requires `HMRF_XENIUM_DIR`) |
 
-## Notes and honest caveats
+`docs/workflow.md` lists the full order, expected runtimes and outputs.
 
-- On real data, the 10x-provided clusterings are used as **reference partitions, not biological
-  ground truth**; the "pipeline-conditioned reference" in the DLPFC benchmark is class-mean
-  unaries from the truth labels + pure mean-field, maximised over the beta grid, and is itself
-  construction-sensitive (0.21-0.63 across initialisation variants on 151673).
-- Baseline-vs-ours is reported under two protocols: official single runs for baselines and the
-  full multi-start protocol for ours, plus a matched-restart-budget control (equal restart counts;
-  Table: `results/matched_budget/matched_budget_summary.csv`).
-- Held-out likelihood is a weak (non-catastrophic) restart selector; ELBO-based selection is an
-  anti-pattern on real data.
+## Reproducibility notes
+
+* The project seed is 49 (`config/defaults.yaml`); per-experiment grids and seeds are stored in the
+  same file and are identical to the values used for the published runs.
+* Scripts write only into their own `results/` directory and never mutate raw data.
+* Kernels are deterministic given the seed; GraphST uses its own seeding and is pinned by version.
+* Negative results (graph cuts, selection criteria) are shipped with their scripts and outputs.
+
+## Citation
+
+Manuscript under review. If you use this code, please cite the repository (DOI to be added) and
+the manuscript.
 
 ## License
 
-Code released under the MIT License (see `LICENSE`). Public datasets remain under their original
-terms; the 10x Xenium bundle and publisher supplementary files are not redistributed here.
+MIT — see `LICENSE`.
+
+## Contact
+
+Tao Zhu — zhutao@tjh.tjmu.edu.cn

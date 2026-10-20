@@ -1,0 +1,128 @@
+# Scalable-HMRF — central configuration
+#
+# Every business constant used by the code lives here. Scripts must not embed
+# dataset paths, slice lists, seeds (other than the project seed below), or
+# hyper-parameter grids. Values below reproduce the published runs exactly.
+#
+# ${ROOT}          -> repository root (auto-detected)
+# ${HMRF_XENIUM_DIR} -> external path to the Xenium output folder (env var)
+
+project:
+  name: scalable-hmrf
+  author: Tao Zhu
+  email: zhutao@tjh.tjmu.edu.cn
+  version: "1.0"
+  seed: 49
+
+paths:
+  data: "${ROOT}/data"
+  experiments: "${ROOT}/experiments"
+  figures: "${ROOT}/figures/output"
+
+datasets:
+  dlpfc12:
+    description: "10x Visium human DLPFC, 12 sections (spatialLIBD)"
+    slices:
+      ["151507", "151508", "151509", "151510",
+       "151669", "151670", "151671", "151672",
+       "151673", "151674", "151675", "151676"]
+    donors:
+      "151507": Br5292
+      "151508": Br5292
+      "151509": Br5292
+      "151510": Br5292
+      "151669": Br5595
+      "151670": Br5595
+      "151671": Br5595
+      "151672": Br5595
+      "151673": Br8100
+      "151674": Br8100
+      "151675": Br8100
+      "151676": Br8100
+    n_clusters: 7
+  dlpfc_single:
+    sample: "151673"
+    files:
+      counts: "151673_raw_feature_bc_matrix.h5"
+      labels: "cluster_labels.csv"
+      positions: "tissue_positions_list.txt"
+  xenium:
+    description: "10x Xenium human breast IDC, 574,852 cells x 280 genes"
+    dir: "${HMRF_XENIUM_DIR}"
+    n_clusters: 8
+    smoke_n: 50000
+    marker_panel:
+      ["EPCAM", "KRT8", "KRT19", "KRT7", "KRT17", "KRT14", "KRT5", "ELF3",
+       "CDH1", "MUC1", "TACSTD2", "MKI67", "TOP2A", "CCNB1", "CCND1",
+       "BIRC5", "PTPRC", "CD2", "CD3E", "IL7R", "TRBC1", "TRBC2", "CD8A",
+       "CD68", "CD14", "AIF1", "ITGAX", "LYZ", "FCGR3A", "CD163", "C1QA",
+       "APOC1", "CD74", "MS4A1", "CD79A", "IGHG1", "COL1A2", "COL3A1",
+       "COL5A1", "DCN", "LUM", "FN1", "POSTN", "SPARC", "VIM", "COL6A1",
+       "ACTA2", "TAGLN", "MYH11", "ACTG2", "MYL9", "VWF", "PECAM1", "ENG",
+       "ESR1", "PGR", "ERBB2", "GRB7", "ADIPOQ", "FABP4", "PLIN1",
+       "CXCL12", "CXCL14", "SPP1", "MMP11", "MMP2", "TIMP1", "TGFB1",
+       "IGFBP5", "CCL19", "CCL21"]
+
+experiments:
+  h2e:
+    old_factors: [0.25, 0.5, 1.0, 2.0, 4.0, 0.35, 1.5, 3.0]
+    new_factors: [0.8, 1.1, 1.5, 2.0, 2.7, 3.7, 5.0, 6.8]
+    beta_grid: [0.3, 0.5, 0.7, 1.0, 1.3, 1.6, 2.0, 2.5, 3.0]
+    cases:
+      - {tag: old_h2,  grid: 250,  dim: 10, disp: 1.0}
+      - {tag: old_h2,  grid: 500,  dim: 10, disp: 1.0}
+      - {tag: new_h2b, grid: 250,  dim: 20, disp: 3.0}
+      - {tag: new_h2b, grid: 500,  dim: 20, disp: 3.0}
+      - {tag: new_h2b, grid: 1000, dim: 20, disp: 3.0}
+    seeds: {truth: 41, emission: 42}
+  h3b:
+    seeds: [11, 12, 13, 14, 15]
+    settings: [[0.7, 1.3], [1.0, 1.3], [0.7, 2.0]]
+    betas: [1.5, 2.5]
+  h3c:
+    n_points: 10000
+    knn: 6
+    dim: 20
+    seed: 0
+  h4d:
+    beta: 0.7
+    oracle_betas: [0.3, 0.5, 0.7, 1.0]
+    n_init: 5
+  h6:
+    fit_sizes: [50, 100, 150, 200, 250, 300]
+    fit_sweeps: {"50": 100, "100": 60, "150": 40, "200": 30, "250": 20, "300": 20}
+  h7:
+    mask_frac: 0.05
+    betas: [0.3, 0.5, 0.7, 1.0, 1.5]
+    masks: [7, 8, 9]
+    slices: ["151673", "151509"]
+  h9:
+    betas: [0.3, 0.5, 0.7, 1.0]
+    n_init: 5
+    methods: ["Ours(best)", "Oracle", "BayesSpace", "SC.MEB", "GraphST"]
+    seven_slices: ["151507", "151508", "151509", "151510",
+                   "151673", "151674", "151675", "151676"]
+    bayesspace_seeds: [100, 101, 102, 103, 104]
+    scmeb_seeds: [100, 101, 102, 103, 104]
+    k_sensitivity: {slice: "151673", beta: 0.7, n_init: 5}
+    reference_robustness_slices: ["151673", "151507"]
+    n_pc: 50
+  h10:
+    n_clusters: 8
+    smoke_n: 50000
+    betas_smoke: [1.0]
+    betas_full: [0.7, 1.0, 1.5]
+    restarts_smoke: 1
+    restarts_full: 3
+    patch_subset: 10000
+    graphst_dir: "${HMRF_GRAPHST_DIR}"
+
+figures:
+  palette:
+    zhusha: "#C23531"
+    shiqing: "#3D6BA8"
+    yanzhi: "#9D2933"
+    dianqing: "#177CB0"
+    grey: "#7F7F7F"
+  figure_size: [7.2, 4.8]
+  dpi: 300

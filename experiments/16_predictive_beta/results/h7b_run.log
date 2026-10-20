@@ -1,0 +1,57 @@
+### 151673 k=7
+/Users/taozhu/Documents/doubaoHMRF/src/hmrf_solvers.py:80: RuntimeWarning: divide by zero encountered in matmul
+  return -0.5 * d * np.log(2 * np.pi * s2) - (ysq - 2 * y2d @ mu.T + (mu ** 2).sum(1)[None, :]) / (2 * s2)
+/Users/taozhu/Documents/doubaoHMRF/src/hmrf_solvers.py:80: RuntimeWarning: overflow encountered in matmul
+  return -0.5 * d * np.log(2 * np.pi * s2) - (ysq - 2 * y2d @ mu.T + (mu ** 2).sum(1)[None, :]) / (2 * s2)
+/Users/taozhu/Documents/doubaoHMRF/src/hmrf_solvers.py:80: RuntimeWarning: invalid value encountered in matmul
+  return -0.5 * d * np.log(2 * np.pi * s2) - (ysq - 2 * y2d @ mu.T + (mu ** 2).sum(1)[None, :]) / (2 * s2)
+/Users/taozhu/Documents/doubaoHMRF/experiments/h7-predictive-beta/code/run.py:67: RuntimeWarning: divide by zero encountered in matmul
+  mu = (w.T @ y) / (w.sum(0)[:, None] + 1e-12)
+/Users/taozhu/Documents/doubaoHMRF/experiments/h7-predictive-beta/code/run.py:67: RuntimeWarning: overflow encountered in matmul
+  mu = (w.T @ y) / (w.sum(0)[:, None] + 1e-12)
+/Users/taozhu/Documents/doubaoHMRF/experiments/h7-predictive-beta/code/run.py:67: RuntimeWarning: invalid value encountered in matmul
+  mu = (w.T @ y) / (w.sum(0)[:, None] + 1e-12)
+/Users/taozhu/Documents/doubaoHMRF/experiments/h7-predictive-beta/code/run.py:88: RuntimeWarning: divide by zero encountered in matmul
+  llk = const - (ysqm - 2 * ym @ mu.T + (mu ** 2).sum(1)[None, :]) / (2 * s2)
+/Users/taozhu/Documents/doubaoHMRF/experiments/h7-predictive-beta/code/run.py:88: RuntimeWarning: overflow encountered in matmul
+  llk = const - (ysqm - 2 * ym @ mu.T + (mu ** 2).sum(1)[None, :]) / (2 * s2)
+/Users/taozhu/Documents/doubaoHMRF/experiments/h7-predictive-beta/code/run.py:88: RuntimeWarning: invalid value encountered in matmul
+  llk = const - (ysqm - 2 * ym @ mu.T + (mu ** 2).sum(1)[None, :]) / (2 * s2)
+{'slice': '151673', 'mask_seed': 7, 'init': 0, 'heldout_ll': -62.142, 'elbo': -233154.8, 'ari': 0.3581, 'iters': 300}
+{'slice': '151673', 'mask_seed': 7, 'init': 1, 'heldout_ll': -62.128, 'elbo': -232153.5, 'ari': 0.2753, 'iters': 300}
+{'slice': '151673', 'mask_seed': 7, 'init': 2, 'heldout_ll': -62.134, 'elbo': -232111.4, 'ari': 0.2905, 'iters': 300}
+{'slice': '151673', 'mask_seed': 7, 'init': 3, 'heldout_ll': -61.782, 'elbo': -233125.9, 'ari': 0.2815, 'iters': 109}
+{'slice': '151673', 'mask_seed': 7, 'init': 4, 'heldout_ll': -61.945, 'elbo': -232188.8, 'ari': 0.1669, 'iters': 300}
+  mask 7: spearman(LL,ARI)=-0.70 spearman(ELBO,ARI)=-0.30 | best init by ari/ll/elbo = 0/3/2 (ARI@0=0.358, ARI@3=0.281, ARI@2=0.290)
+{'slice': '151673', 'mask_seed': 8, 'init': 0, 'heldout_ll': -79.262, 'elbo': -231768.1, 'ari': 0.1316, 'iters': 276}
+{'slice': '151673', 'mask_seed': 8, 'init': 1, 'heldout_ll': -78.99, 'elbo': -231455.4, 'ari': 0.3417, 'iters': 300}
+{'slice': '151673', 'mask_seed': 8, 'init': 2, 'heldout_ll': -79.062, 'elbo': -231267.8, 'ari': 0.2538, 'iters': 300}
+{'slice': '151673', 'mask_seed': 8, 'init': 3, 'heldout_ll': -78.956, 'elbo': -232591.0, 'ari': 0.2135, 'iters': 298}
+{'slice': '151673', 'mask_seed': 8, 'init': 4, 'heldout_ll': -78.849, 'elbo': -231488.8, 'ari': 0.3407, 'iters': 300}
+  mask 8: spearman(LL,ARI)=0.50 spearman(ELBO,ARI)=0.60 | best init by ari/ll/elbo = 1/4/2 (ARI@1=0.342, ARI@4=0.341, ARI@2=0.254)
+{'slice': '151673', 'mask_seed': 9, 'init': 0, 'heldout_ll': -70.459, 'elbo': -233148.0, 'ari': 0.4273, 'iters': 289}
+{'slice': '151673', 'mask_seed': 9, 'init': 1, 'heldout_ll': -71.268, 'elbo': -234112.3, 'ari': 0.0022, 'iters': 12}
+{'slice': '151673', 'mask_seed': 9, 'init': 2, 'heldout_ll': -71.258, 'elbo': -234081.0, 'ari': 0.0007, 'iters': 12}
+{'slice': '151673', 'mask_seed': 9, 'init': 3, 'heldout_ll': -70.983, 'elbo': -233188.8, 'ari': 0.3452, 'iters': 300}
+{'slice': '151673', 'mask_seed': 9, 'init': 4, 'heldout_ll': -70.437, 'elbo': -233206.7, 'ari': 0.3819, 'iters': 128}
+  mask 9: spearman(LL,ARI)=0.80 spearman(ELBO,ARI)=0.80 | best init by ari/ll/elbo = 0/4/0 (ARI@0=0.427, ARI@4=0.382, ARI@0=0.427)
+### 151509 k=7
+{'slice': '151509', 'mask_seed': 7, 'init': 0, 'heldout_ll': -67.169, 'elbo': -307837.9, 'ari': 0.3459, 'iters': 127}
+{'slice': '151509', 'mask_seed': 7, 'init': 1, 'heldout_ll': -67.144, 'elbo': -308480.0, 'ari': 0.4265, 'iters': 280}
+{'slice': '151509', 'mask_seed': 7, 'init': 2, 'heldout_ll': -66.95, 'elbo': -306757.7, 'ari': 0.5446, 'iters': 106}
+{'slice': '151509', 'mask_seed': 7, 'init': 3, 'heldout_ll': -66.931, 'elbo': -306915.6, 'ari': 0.508, 'iters': 73}
+{'slice': '151509', 'mask_seed': 7, 'init': 4, 'heldout_ll': -66.937, 'elbo': -306670.7, 'ari': 0.5029, 'iters': 143}
+  mask 7: spearman(LL,ARI)=0.70 spearman(ELBO,ARI)=0.60 | best init by ari/ll/elbo = 2/3/4 (ARI@2=0.545, ARI@3=0.508, ARI@4=0.503)
+{'slice': '151509', 'mask_seed': 8, 'init': 0, 'heldout_ll': -78.635, 'elbo': -307123.8, 'ari': 0.2378, 'iters': 192}
+{'slice': '151509', 'mask_seed': 8, 'init': 1, 'heldout_ll': -78.887, 'elbo': -307689.2, 'ari': 0.3788, 'iters': 300}
+{'slice': '151509', 'mask_seed': 8, 'init': 2, 'heldout_ll': -78.867, 'elbo': -306975.7, 'ari': 0.3764, 'iters': 300}
+{'slice': '151509', 'mask_seed': 8, 'init': 3, 'heldout_ll': -78.473, 'elbo': -307874.8, 'ari': 0.4497, 'iters': 300}
+{'slice': '151509', 'mask_seed': 8, 'init': 4, 'heldout_ll': -78.708, 'elbo': -306258.2, 'ari': 0.211, 'iters': 139}
+  mask 8: spearman(LL,ARI)=0.10 spearman(ELBO,ARI)=-0.90 | best init by ari/ll/elbo = 3/3/4 (ARI@3=0.450, ARI@3=0.450, ARI@4=0.211)
+{'slice': '151509', 'mask_seed': 9, 'init': 0, 'heldout_ll': -73.353, 'elbo': -307987.0, 'ari': 0.384, 'iters': 300}
+{'slice': '151509', 'mask_seed': 9, 'init': 1, 'heldout_ll': -73.542, 'elbo': -308035.9, 'ari': 0.3487, 'iters': 286}
+{'slice': '151509', 'mask_seed': 9, 'init': 2, 'heldout_ll': -73.883, 'elbo': -309436.6, 'ari': 0.0431, 'iters': 29}
+{'slice': '151509', 'mask_seed': 9, 'init': 3, 'heldout_ll': -73.261, 'elbo': -308106.6, 'ari': 0.4438, 'iters': 300}
+{'slice': '151509', 'mask_seed': 9, 'init': 4, 'heldout_ll': -73.23, 'elbo': -308127.7, 'ari': 0.4519, 'iters': 209}
+  mask 9: spearman(LL,ARI)=1.00 spearman(ELBO,ARI)=0.10 | best init by ari/ll/elbo = 4/4/0 (ARI@4=0.452, ARI@4=0.452, ARI@0=0.384)
+DONE h7b

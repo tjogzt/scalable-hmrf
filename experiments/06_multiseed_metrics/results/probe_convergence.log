@@ -1,0 +1,15 @@
+== A: S=100 inst=21, max_iter=3000 ==
+{'r': 0, 'iters': 378, 'ari': 0.9926, 'sigma_hat': 0.505, 't': 0.6}
+{'r': 1, 'iters': 366, 'ari': 0.948, 'sigma_hat': 0.588, 't': 0.5}
+{'r': 2, 'iters': 356, 'ari': 0.9181, 'sigma_hat': 0.588, 't': 0.5}
+== B: S=250 capped cases, max_iter=3000 ==
+{'iseed': 51, 'r': 0, 'iters': 2111, 'ari': 0.8253, 'sigma_hat': 0.59, 't': 20.1}
+{'iseed': 41, 'r': 2, 'iters': 367, 'ari': 0.9936, 'sigma_hat': 0.501, 't': 3.5}
+== C: S=750 inst=11 escape attempts, seeds 6..11, max_iter=300 ==
+{'seed': 6, 'iters': 16, 'ari': 0.9937, 'sigma_hat': 0.5, 't': 1.9}
+{'seed': 7, 'iters': 13, 'ari': 0.9937, 'sigma_hat': 0.5, 't': 1.7}
+{'seed': 8, 'iters': 13, 'ari': 0.9937, 'sigma_hat': 0.5, 't': 1.7}
+{'seed': 9, 'iters': 15, 'ari': 0.9937, 'sigma_hat': 0.5, 't': 1.9}
+{'seed': 10, 'iters': 16, 'ari': 0.9937, 'sigma_hat': 0.5, 't': 2.0}
+{'seed': 11, 'iters': 14, 'ari': 0.9937, 'sigma_hat': 0.5, 't': 1.8}
+PROBE DONE
