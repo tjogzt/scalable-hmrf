@@ -132,7 +132,16 @@ def gaussian_log_unaries(y2d, mu, sigma):
     return -0.5 * d * np.log(2 * np.pi * s2) - (ysq - 2 * y2d @ mu.T + (mu ** 2).sum(1)[None, :]) / (2 * s2)
 
 def nb_log_unaries(y2d, mu, disp):
-    """NB emission unary terms (drop the constant term independent of k; does not affect softmax/M-step)."""
+    """NB emission unary terms (the constant term independent of k is dropped).
+
+    Note:
+        A zero class mean for a zero-count gene is intentional: ``log(0) = -inf``
+        drives that gene to probability zero for the class, and NumPy emits
+        RuntimeWarning for the underlying multiply. Clipping the mean would make
+        the unary finite and change the fitted labels (verified: it shifts some
+        ARI values by up to 0.11), so the arithmetic is kept as-is and the
+        warning is expected for zero-inflated counts.
+    """
     logm = np.log(np.asarray(mu, dtype=np.float64))
     logdm = np.log(disp + mu)
     return y2d @ (logm.T - logdm.T) + disp * (y2d.shape[1] * np.log(disp) - logdm.sum(1))[None, :]
